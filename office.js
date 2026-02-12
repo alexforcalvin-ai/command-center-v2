@@ -17,7 +17,7 @@ const agents = [
     { id: 'randy', name: 'Randy', role: 'R&D', color: '#a855f7' },
     { id: 'annie', name: 'Annie', role: 'Analyst', color: '#f97316' },
     { id: 'ivan', name: 'Ivan', role: 'Trader', color: '#eab308' },
-    { id: 'tara', name: 'Tara', role: 'Travel', color: '#14b8a6' },
+    { id: 'tori', name: 'Tori', role: 'Travel', color: '#14b8a6' },
     { id: 'leo', name: 'Leo', role: 'Legal', color: '#6366f1' },
     { id: 'clara', name: 'Clara', role: 'Support', color: '#f472b6' },
     { id: 'simon', name: 'Simon', role: 'Security', color: '#64748b' },
