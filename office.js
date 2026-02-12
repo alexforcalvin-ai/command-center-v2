@@ -103,7 +103,7 @@ let waitingQueue = [];
 function loadAgentStates() {
     // Check version - if old version, reset to get new data structure
     const version = localStorage.getItem('commandCenterVersion');
-    const CURRENT_VERSION = '2.1';
+    const CURRENT_VERSION = '2.2'; // Bumped to reset Calvin's cleared queue
     
     if (version !== CURRENT_VERSION) {
         // New version - reset everything to get new defaults
