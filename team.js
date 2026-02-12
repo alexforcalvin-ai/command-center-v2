@@ -134,13 +134,13 @@ const teamProfiles = {
         training: 'Trading strategies, position sizing, crypto markets, prediction markets.',
         askMeAbout: ['Current positions', 'Trade rationale', 'Portfolio status', 'Market outlook']
     },
-    tori: {
-        name: 'Tori',
+    sky: {
+        name: 'Sky',
         role: 'Travel Coordinator',
         color: '#14b8a6',
         emoji: '✈️',
         model: 'Claude Sonnet',
-        bio: 'Travel expert. Tori handles trip planning, bookings, and travel logistics.',
+        bio: 'Travel expert. Sky handles trip planning, bookings, and travel logistics.',
         strengths: ['Trip planning', 'Hotel research', 'Flight logistics', 'Travel optimization'],
         personality: 'Adventurous, organized, detail-oriented. Makes travel seamless.',
         training: 'Calvin\'s travel preferences, family needs, eclipse planning, luxury travel.',
@@ -306,7 +306,7 @@ function getHairColor(agentId) {
         randy: '#6b4423',
         annie: '#d4a574',
         ivan: '#1a1a1a',
-        tori: '#2c1810',
+        sky: '#2c1810',
         leo: '#4a3728',
         clara: '#d4a574',
         simon: '#666666',
