@@ -117,27 +117,43 @@ function renderWaitingItems() {
         return;
     }
     
-    container.innerHTML = waitingItems.map(item => `
-        <div class="waiting-item" onclick="showItemDetail('${item.agentId}')">
-            <div class="waiting-item-content">
-                <h4>${item.title}</h4>
-                <p><strong>${item.agent}:</strong> ${item.desc}</p>
-                <p class="click-hint">Click for full details →</p>
+    // Sort by createdAt (oldest first)
+    waitingItems.sort((a, b) => a.createdAt - b.createdAt);
+    
+    container.innerHTML = waitingItems.map(item => {
+        const timeAgo = getTimeAgo(item.createdAt);
+        return `
+            <div class="waiting-item" onclick="showItemDetail('${item.id}')">
+                <div class="waiting-item-content">
+                    <h4>${item.title}</h4>
+                    <p><strong>${item.agent}:</strong> ${item.desc}</p>
+                    <p class="click-hint">${timeAgo} · Click for details →</p>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
-function showItemDetail(agentId) {
-    const states = window.getAgentStates ? window.getAgentStates() : {};
-    const state = states[agentId];
-    if (!state || !state.waitingItem) return;
+function getTimeAgo(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+}
+
+function showItemDetail(itemId) {
+    const waitingItems = window.getWaitingItems ? window.getWaitingItems() : [];
+    const item = waitingItems.find(i => i.id === itemId);
+    if (!item) return;
     
-    const agent = window.agents.find(a => a.id === agentId);
+    const agent = window.agents.find(a => a.id === item.agentId);
     if (!agent) return;
     
-    const item = state.waitingItem;
-    currentModalAgent = agentId;
+    currentModalAgent = itemId; // Store item ID, not agent ID
     
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `
@@ -200,12 +216,20 @@ function closeModal() {
 }
 
 function approveFromModal() {
-    if (currentModalAgent && window.moveAgentTo) {
-        const agent = window.agents.find(a => a.id === currentModalAgent);
-        window.moveAgentTo(currentModalAgent, 'working', 'Approved - proceeding');
+    if (currentModalAgent && window.removeFromWaitingQueue) {
+        // Get the item before removing
+        const waitingItems = window.getWaitingItems ? window.getWaitingItems() : [];
+        const item = waitingItems.find(i => i.id === currentModalAgent);
         
-        if (agent) {
-            addToFeed(agent.name.toLowerCase(), 'approved by Calvin ✓', '#22c55e');
+        if (item) {
+            const agent = window.agents.find(a => a.id === item.agentId);
+            
+            // Remove from waiting queue
+            window.removeFromWaitingQueue(currentModalAgent);
+            
+            if (agent) {
+                addToFeed(agent.name.toLowerCase(), `approved: ${item.title} ✓`, '#22c55e');
+            }
         }
     }
     closeModal();
@@ -213,12 +237,20 @@ function approveFromModal() {
 }
 
 function denyFromModal() {
-    if (currentModalAgent && window.moveAgentTo) {
-        const agent = window.agents.find(a => a.id === currentModalAgent);
-        window.moveAgentTo(currentModalAgent, 'working', 'Request denied - finding alternative');
+    if (currentModalAgent && window.removeFromWaitingQueue) {
+        // Get the item before removing
+        const waitingItems = window.getWaitingItems ? window.getWaitingItems() : [];
+        const item = waitingItems.find(i => i.id === currentModalAgent);
         
-        if (agent) {
-            addToFeed(agent.name.toLowerCase(), 'request denied by Calvin', '#f85149');
+        if (item) {
+            const agent = window.agents.find(a => a.id === item.agentId);
+            
+            // Remove from waiting queue
+            window.removeFromWaitingQueue(currentModalAgent);
+            
+            if (agent) {
+                addToFeed(agent.name.toLowerCase(), `denied: ${item.title}`, '#f85149');
+            }
         }
     }
     closeModal();
@@ -297,8 +329,8 @@ function renderFilteredFeed(agentFilter) {
 }
 
 // Legacy function for inline approve buttons (if any remain)
-function approveItem(agentId) {
-    showItemDetail(agentId);
+function approveItem(itemId) {
+    showItemDetail(itemId);
 }
 
 // Initialize feed with some starting items

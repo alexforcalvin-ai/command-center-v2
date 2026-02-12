@@ -96,6 +96,9 @@ let lastStateUpdate = 0;
 // Central agent state - this is what gets synced with Command Center
 let agentStates = {};
 
+// Separate queue for items waiting on Calvin - persists regardless of agent location
+let waitingQueue = [];
+
 // Load initial states from localStorage or use defaults
 function loadAgentStates() {
     const saved = localStorage.getItem('agentStates');
@@ -108,17 +111,26 @@ function loadAgentStates() {
     } else {
         agentStates = getDefaultStates();
     }
+    
+    // Load waiting queue separately
+    const savedQueue = localStorage.getItem('waitingQueue');
+    if (savedQueue) {
+        try {
+            waitingQueue = JSON.parse(savedQueue);
+        } catch(e) {
+            waitingQueue = getDefaultWaitingQueue();
+        }
+    } else {
+        waitingQueue = getDefaultWaitingQueue();
+    }
 }
 
-function getDefaultStates() {
-    return {
-        alex: { state: 'alexOffice', task: 'Coordinating team', waitingItem: null },
-        penny: { state: 'working', task: 'Managing calendars', waitingItem: null },
-        owen: { state: 'working', task: 'Processing applications', waitingItem: null },
-        devin: { state: 'working', task: 'Building Command Center', waitingItem: null },
-        denise: { state: 'meeting', task: 'Design review', waitingItem: null },
-        molly: { state: 'idle', task: '', waitingItem: null },
-        finn: { state: 'waiting', task: 'Needs QuickBooks access', waitingItem: {
+function getDefaultWaitingQueue() {
+    return [
+        {
+            id: 'finn-quickbooks',
+            agentId: 'finn',
+            createdAt: Date.now() - 3600000, // 1 hour ago
             title: 'QuickBooks Access Required',
             desc: 'Need credentials to set up financial tracking',
             context: 'I need to connect to QuickBooks to start tracking revenue, expenses, and cash flow across all companies. This will enable automated financial reporting and alerts.',
@@ -130,11 +142,11 @@ function getDefaultStates() {
             whyItMatters: 'Without QuickBooks access, I cannot provide accurate financial dashboards, track monthly revenue trends, or alert you to cash flow issues. Currently flying blind on finances.',
             deadline: 'No hard deadline, but sooner = sooner I can start providing value',
             alternatives: 'If QuickBooks isn\'t preferred, I can also work with Xero, FreshBooks, or direct bank feeds.'
-        }},
-        mark: { state: 'working', task: 'Marketing plan', waitingItem: null },
-        randy: { state: 'meeting', task: 'Research review', waitingItem: null },
-        annie: { state: 'idle', task: '', waitingItem: null },
-        ivan: { state: 'waiting', task: 'Trading credentials', waitingItem: {
+        },
+        {
+            id: 'ivan-coinbase',
+            agentId: 'ivan',
+            createdAt: Date.now() - 7200000, // 2 hours ago
             title: 'Coinbase Access for UNI Position',
             desc: 'Need trading credentials to execute the UNI play',
             context: 'You mentioned interest in a UNI (Uniswap) position. I\'ve been monitoring the market and have some entry points identified, but I need exchange access to execute.',
@@ -146,19 +158,39 @@ function getDefaultStates() {
             whyItMatters: 'UNI is currently at a potential entry point based on my analysis. Without access, I can only advise but not act. If you want me to manage trades, I need credentials.',
             deadline: 'Market-dependent - entry points don\'t last forever',
             alternatives: 'I can also work with Kraken, Gemini, or other exchanges if you prefer. Or I can just provide alerts and you execute manually.'
-        }},
-        tara: { state: 'idle', task: '', waitingItem: null },
-        leo: { state: 'withAlex', task: 'Policy review', waitingItem: null },
-        clara: { state: 'working', task: 'Support tickets', waitingItem: null },
-        simon: { state: 'withAlex', task: 'Security review', waitingItem: null },
-        henry: { state: 'idle', task: '', waitingItem: null }
+        }
+    ];
+}
+
+function getDefaultStates() {
+    // Agent visual states are separate from waiting queue
+    // An agent can be working/meeting and still have items in Calvin's queue
+    return {
+        alex: { state: 'alexOffice', task: 'Coordinating team' },
+        penny: { state: 'working', task: 'Managing calendars' },
+        owen: { state: 'working', task: 'Processing applications' },
+        devin: { state: 'working', task: 'Building Command Center' },
+        denise: { state: 'meeting', task: 'Design review' },
+        molly: { state: 'idle', task: '' },
+        finn: { state: 'working', task: 'Preparing financial reports' },  // Has item in queue but working
+        mark: { state: 'working', task: 'Marketing plan' },
+        randy: { state: 'meeting', task: 'Research review' },
+        annie: { state: 'idle', task: '' },
+        ivan: { state: 'working', task: 'Market analysis' },  // Has item in queue but working
+        tara: { state: 'idle', task: '' },
+        leo: { state: 'withAlex', task: 'Policy review' },
+        clara: { state: 'working', task: 'Support tickets' },
+        simon: { state: 'withAlex', task: 'Security review' },
+        henry: { state: 'idle', task: '' }
     };
 }
 
 function saveAgentStates() {
     localStorage.setItem('agentStates', JSON.stringify(agentStates));
+    localStorage.setItem('waitingQueue', JSON.stringify(waitingQueue));
     // Dispatch event for Command Center to pick up
     window.dispatchEvent(new CustomEvent('agentStatesUpdated', { detail: agentStates }));
+    window.dispatchEvent(new CustomEvent('waitingQueueUpdated', { detail: waitingQueue }));
 }
 
 function initOffice() {
@@ -654,21 +686,43 @@ window.getAgentStates = function() {
 };
 
 window.getWaitingItems = function() {
-    const items = [];
-    for (const [agentId, state] of Object.entries(agentStates)) {
-        if (state.state === 'waiting' && state.waitingItem) {
-            const agent = agents.find(a => a.id === agentId);
-            items.push({
-                id: agentId,
-                agent: agent ? agent.name : agentId,
-                agentId: agentId,
-                title: state.waitingItem.title,
-                desc: state.waitingItem.desc,
-                task: state.task
-            });
-        }
+    // Return from the persistent waiting queue, not agent visual state
+    return waitingQueue.map(item => {
+        const agent = agents.find(a => a.id === item.agentId);
+        return {
+            ...item,
+            agent: agent ? agent.name : item.agentId,
+            agentColor: agent ? agent.color : '#666',
+            agentRole: agent ? agent.role : ''
+        };
+    });
+};
+
+window.addToWaitingQueue = function(agentId, item) {
+    // Add a new item to the waiting queue
+    const newItem = {
+        id: `${agentId}-${Date.now()}`,
+        agentId: agentId,
+        createdAt: Date.now(),
+        ...item
+    };
+    waitingQueue.push(newItem);
+    saveAgentStates();
+    return newItem.id;
+};
+
+window.removeFromWaitingQueue = function(itemId) {
+    const idx = waitingQueue.findIndex(i => i.id === itemId);
+    if (idx > -1) {
+        waitingQueue.splice(idx, 1);
+        saveAgentStates();
+        return true;
     }
-    return items;
+    return false;
+};
+
+window.getWaitingQueue = function() {
+    return waitingQueue;
 };
 
 window.agents = agents;
