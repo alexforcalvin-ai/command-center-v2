@@ -251,8 +251,39 @@ body {
     background: #0d0d1a;
     max-width: 100%;
     height: auto;
+    touch-action: pan-x pan-y;
 }
 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .tab {
+        padding: 12px 16px;
+        font-size: 10px;
+    }
+
+    .team-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .team-title {
+        font-size: 14px;
+    }
+
+    .panel,
+    .modal-content {
+        padding: 12px;
+    }
+}
 #agent-info-panel {
     margin-top: 12px;
     padding: 12px 20px;
