@@ -113,7 +113,7 @@ let waitingQueue = [];
 function loadAgentStates() {
     // Check version - if old version, reset to get new data structure
     const version = localStorage.getItem('commandCenterVersion');
-    const CURRENT_VERSION = '2.8'; // Bidirectional sync - visual waiting auto-creates queue items
+    const CURRENT_VERSION = '2.9'; // Fixed queue->meetingSpots reference error
     
     if (version !== CURRENT_VERSION) {
         // New version - reset everything to get new defaults
@@ -413,7 +413,7 @@ function updateAgentPositions() {
                 break;
                 
             case 'waiting':
-                target = layout.calvinsOffice.queue[waitIdx % layout.calvinsOffice.queue.length];
+                target = layout.calvinsOffice.meetingSpots[waitIdx % layout.calvinsOffice.meetingSpots.length];
                 waitIdx++;
                 break;
                 
