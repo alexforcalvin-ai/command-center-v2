@@ -101,6 +101,18 @@ let waitingQueue = [];
 
 // Load initial states from localStorage or use defaults
 function loadAgentStates() {
+    // Check version - if old version, reset to get new data structure
+    const version = localStorage.getItem('commandCenterVersion');
+    const CURRENT_VERSION = '2.1';
+    
+    if (version !== CURRENT_VERSION) {
+        // New version - reset everything to get new defaults
+        console.log('Command Center updated - resetting to new defaults');
+        localStorage.removeItem('agentStates');
+        localStorage.removeItem('waitingQueue');
+        localStorage.setItem('commandCenterVersion', CURRENT_VERSION);
+    }
+    
     const saved = localStorage.getItem('agentStates');
     if (saved) {
         try {
@@ -122,6 +134,34 @@ function loadAgentStates() {
         }
     } else {
         waitingQueue = getDefaultWaitingQueue();
+    }
+    
+    // Sync visual states - agents with items in queue should show as waiting
+    syncVisualStatesWithQueue();
+}
+
+function syncVisualStatesWithQueue() {
+    // Get all agent IDs that have items in the waiting queue
+    const agentsWithWaitingItems = new Set(waitingQueue.map(item => item.agentId));
+    
+    // Update visual states - agents with queue items should be in Calvin's office
+    for (const agentId of agentsWithWaitingItems) {
+        if (agentStates[agentId] && agentStates[agentId].state !== 'waiting') {
+            // They have a waiting item but aren't visually waiting - update
+            const queueItem = waitingQueue.find(i => i.agentId === agentId);
+            if (queueItem) {
+                agentStates[agentId].state = 'waiting';
+                agentStates[agentId].task = queueItem.title;
+            }
+        }
+    }
+    
+    // Also: agents visually waiting but without queue items should go back to working
+    for (const [agentId, state] of Object.entries(agentStates)) {
+        if (state.state === 'waiting' && !agentsWithWaitingItems.has(agentId)) {
+            agentStates[agentId].state = 'working';
+            agentStates[agentId].task = 'Back to work';
+        }
     }
 }
 
@@ -771,15 +811,34 @@ window.addToWaitingQueue = function(agentId, item) {
         ...item
     };
     waitingQueue.push(newItem);
+    
+    // Move agent to waiting state visually
+    if (agentStates[agentId]) {
+        agentStates[agentId].state = 'waiting';
+        agentStates[agentId].task = item.title || 'Needs Calvin';
+    }
+    
     saveAgentStates();
+    updateAgentPositions();
     return newItem.id;
 };
 
 window.removeFromWaitingQueue = function(itemId) {
     const idx = waitingQueue.findIndex(i => i.id === itemId);
     if (idx > -1) {
+        const removedItem = waitingQueue[idx];
         waitingQueue.splice(idx, 1);
+        
+        // If this agent has no more items in queue, move them out of waiting
+        const agentId = removedItem.agentId;
+        const hasMoreItems = waitingQueue.some(i => i.agentId === agentId);
+        if (!hasMoreItems && agentStates[agentId]) {
+            agentStates[agentId].state = 'working';
+            agentStates[agentId].task = 'Task completed';
+        }
+        
         saveAgentStates();
+        updateAgentPositions();
         return true;
     }
     return false;
