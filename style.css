@@ -418,6 +418,75 @@ body {
     white-space: pre-wrap;
 }
 
+/* Response input */
+.response-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #30363d;
+}
+
+.response-section h4 {
+    font-size: 12px;
+    color: #e6edf3;
+    margin-bottom: 10px;
+}
+
+.response-input {
+    width: 100%;
+    min-height: 100px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 12px;
+    color: #e6edf3;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 12px;
+}
+
+.response-input:focus {
+    outline: none;
+    border-color: #58a6ff;
+}
+
+.response-input::placeholder {
+    color: #6e7681;
+}
+
+.quick-responses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.quick-response-btn {
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quick-response-btn:hover {
+    background: #30363d;
+    color: #e6edf3;
+    border-color: #484f58;
+}
+
+.btn-send {
+    background: #1f6feb;
+    color: white;
+}
+
+.btn-send:hover {
+    background: #388bfd;
+}
+
 /* Waiting items - clickable */
 .waiting-item {
     background: #0d1117;

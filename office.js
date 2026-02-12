@@ -128,36 +128,100 @@ function loadAgentStates() {
 function getDefaultWaitingQueue() {
     return [
         {
-            id: 'finn-quickbooks',
-            agentId: 'finn',
-            createdAt: Date.now() - 3600000, // 1 hour ago
-            title: 'QuickBooks Access Required',
-            desc: 'Need credentials to set up financial tracking',
-            context: 'I need to connect to QuickBooks to start tracking revenue, expenses, and cash flow across all companies. This will enable automated financial reporting and alerts.',
+            id: 'penny-podcast-conflict',
+            agentId: 'penny',
+            createdAt: Date.now() - 1800000, // 30 min ago
+            title: 'Podcast Scheduling Conflict - Need Your Call',
+            desc: 'Two podcasts want the same slot, which do you prefer?',
+            context: `Two podcast hosts responded at the same time and both want Thursday Feb 13 at 2pm PST:
+
+**Option A: "The Entrepreneur's Journey" with Mike Davidson**
+- 50K downloads/episode
+- Focus: Business origin stories, overcoming adversity
+- Perfect fit for "Hiding from the School Bus" promotion
+- Mike specifically mentioned reading your book and loving it
+
+**Option B: "Medicare Decoded" with Sarah Chen**
+- 25K downloads/episode  
+- Focus: Medicare industry deep-dives, policy discussion
+- Great for Nuvo Health/PlanFit positioning
+- Sarah wants to discuss the CMS 2027 Final Rule
+
+Both are solid opportunities. I can only book one for Thursday. The other I'd need to push to next week.`,
             whatINeed: [
-                'QuickBooks Online login credentials (email + password)',
-                'Or: Admin invite sent to finn@alex.calvinbagley.com',
-                'Confirmation of which entities to track (Nuvo Health, PlanFit, Medicare Store, etc.)'
+                'Which podcast should get the Thursday 2pm slot?',
+                'Should I try to book the other one for Monday Feb 17 or Tuesday Feb 18?'
             ],
-            whyItMatters: 'Without QuickBooks access, I cannot provide accurate financial dashboards, track monthly revenue trends, or alert you to cash flow issues. Currently flying blind on finances.',
-            deadline: 'No hard deadline, but sooner = sooner I can start providing value',
-            alternatives: 'If QuickBooks isn\'t preferred, I can also work with Xero, FreshBooks, or direct bank feeds.'
+            whyItMatters: 'Both hosts are waiting on confirmation. First-mover advantage - if we delay too long, they may fill the slot with someone else.',
+            deadline: 'Need to respond within 24 hours to hold either slot',
+            alternatives: 'I could also ask both if they have flexibility on time/date, but that risks losing both if they fill their preferred slots.'
         },
         {
-            id: 'ivan-coinbase',
-            agentId: 'ivan',
-            createdAt: Date.now() - 7200000, // 2 hours ago
-            title: 'Coinbase Access for UNI Position',
-            desc: 'Need trading credentials to execute the UNI play',
-            context: 'You mentioned interest in a UNI (Uniswap) position. I\'ve been monitoring the market and have some entry points identified, but I need exchange access to execute.',
+            id: 'mark-linkedin-post',
+            agentId: 'mark',
+            createdAt: Date.now() - 3600000, // 1 hour ago
+            title: 'LinkedIn Post Ready for Review',
+            desc: 'Drafted post about CMS transparency - need your approval before posting',
+            context: `Here's the draft LinkedIn post I wrote based on your recent talking points:
+
+---
+**The CMS transparency problem nobody's talking about:**
+
+When I testify in DC next month, I'll be asking a simple question: Why can't Medicare beneficiaries see the commissions agents earn?
+
+Here's what happens today:
+• Agent recommends Plan A (pays $600 commission)
+• Beneficiary has no idea Plan B (pays $200) might be better for them
+• The agent isn't required to disclose this conflict
+
+I'm not saying most agents are bad actors. Most aren't. But the SYSTEM creates misaligned incentives.
+
+At PlanFit, we solved this by paying agents salary only. Same paycheck whether you enroll someone in a $0 or $600 plan.
+
+Radical transparency shouldn't be radical.
+
+What do you think - should commission disclosure be mandatory?
+---
+
+**Stats:** ~2,100 characters. Good length for engagement. I'd post Tuesday morning 8am PST for maximum visibility.`,
             whatINeed: [
-                'Coinbase Pro API key (read + trade permissions)',
-                'Or: Login credentials for manual execution guidance',
-                'Confirmation of position size / risk tolerance'
+                'Approve this draft as-is?',
+                'Or provide edits/feedback?',
+                'Confirm Tuesday 8am PST posting time works?'
             ],
-            whyItMatters: 'UNI is currently at a potential entry point based on my analysis. Without access, I can only advise but not act. If you want me to manage trades, I need credentials.',
-            deadline: 'Market-dependent - entry points don\'t last forever',
-            alternatives: 'I can also work with Kraken, Gemini, or other exchanges if you prefer. Or I can just provide alerts and you execute manually.'
+            whyItMatters: 'This aligns with your DC testimony prep and positions you as the transparency advocate. Good timing before your CMS meetings.',
+            deadline: 'Need approval by Monday evening to hit Tuesday morning slot',
+            alternatives: 'Could also split into a thread format, or save for after the DC testimony if you want to reference it.'
+        },
+        {
+            id: 'finn-quickbooks',
+            agentId: 'finn',
+            createdAt: Date.now() - 7200000, // 2 hours ago
+            title: 'QuickBooks Access for Financial Dashboards',
+            desc: 'Need credentials to start building automated financial tracking',
+            context: `I'm ready to build your financial command center, but I need access to the books.
+
+**What I'll create once connected:**
+- Real-time revenue dashboard across all entities
+- Cash flow alerts (notify you if any account drops below threshold)
+- Monthly P&L auto-generated and sent to you
+- Expense anomaly detection (flag unusual charges)
+- Commission tracking by agent (for Medicare Store locations)
+
+**Current accounting setup I found:**
+- Nuvo Health: QuickBooks Online (confirmed with Karissa)
+- PlanFit: Likely separate QuickBooks instance
+- Medicare Store locations: Unknown - may be consolidated or separate
+
+I need to know what's where before I can connect.`,
+            whatINeed: [
+                'QuickBooks Online login for Nuvo Health (or admin invite to finn@alex.calvinbagley.com)',
+                'Confirmation: Is PlanFit on separate books or consolidated with Nuvo?',
+                'Who currently does bookkeeping? (So I can coordinate, not step on toes)'
+            ],
+            whyItMatters: 'You mentioned wanting better financial visibility. I can\'t provide that without access. Once connected, I can have your first dashboard ready within 48 hours.',
+            deadline: 'No hard deadline - but every day without access is a day without visibility',
+            alternatives: 'If you\'re not comfortable giving me direct access, I can work with read-only API access, or just receive exported reports to analyze.'
         }
     ];
 }

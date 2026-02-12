@@ -156,6 +156,10 @@ function showItemDetail(itemId) {
     currentModalAgent = itemId; // Store item ID, not agent ID
     
     const modalBody = document.getElementById('modal-body');
+    
+    // Generate quick responses based on what's needed
+    const quickResponses = generateQuickResponses(item);
+    
     modalBody.innerHTML = `
         <div class="modal-header">
             <div class="modal-avatar" style="background:${agent.color}">${agent.name.substring(0,2).toUpperCase()}</div>
@@ -200,9 +204,19 @@ function showItemDetail(itemId) {
         </div>
         ` : ''}
         
+        <div class="response-section">
+            <h4>💬 Your Response to ${agent.name}</h4>
+            ${quickResponses.length > 0 ? `
+            <div class="quick-responses">
+                ${quickResponses.map(qr => `<button class="quick-response-btn" onclick="insertQuickResponse('${escapeHtml(qr)}')">${qr}</button>`).join('')}
+            </div>
+            ` : ''}
+            <textarea id="response-input" class="response-input" placeholder="Type your response, provide credentials, answer questions, or give instructions..."></textarea>
+        </div>
+        
         <div class="modal-actions">
-            <button class="btn-large btn-approve-large" onclick="approveFromModal()">✓ Approve / Provide</button>
-            <button class="btn-large btn-later" onclick="closeModal()">Later</button>
+            <button class="btn-large btn-send" onclick="sendResponseFromModal()">📤 Send Response</button>
+            <button class="btn-large btn-approve-large" onclick="approveFromModal()">✓ Approve</button>
             <button class="btn-large btn-deny" onclick="denyFromModal()">✗ Deny</button>
         </div>
     `;
@@ -326,6 +340,113 @@ function renderFilteredFeed(agentFilter) {
             <span class="feed-time">${item.time}</span>
         </div>
     `).join('');
+}
+
+function generateQuickResponses(item) {
+    const responses = [];
+    
+    // Generic quick responses
+    responses.push("Yes, approved");
+    responses.push("Not right now");
+    responses.push("Let's discuss first");
+    
+    // Context-specific responses based on keywords
+    if (item.title.toLowerCase().includes('access') || item.title.toLowerCase().includes('credentials')) {
+        responses.push("I'll send credentials separately");
+        responses.push("Use my standard login");
+    }
+    if (item.title.toLowerCase().includes('budget') || item.title.toLowerCase().includes('cost')) {
+        responses.push("What's the cost?");
+        responses.push("Keep it under $500");
+    }
+    if (item.title.toLowerCase().includes('schedule') || item.title.toLowerCase().includes('meeting')) {
+        responses.push("Check my calendar");
+        responses.push("After 2pm works");
+    }
+    
+    return responses.slice(0, 5); // Max 5 quick responses
+}
+
+function escapeHtml(text) {
+    return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+function insertQuickResponse(text) {
+    const input = document.getElementById('response-input');
+    if (input) {
+        input.value = text;
+        input.focus();
+    }
+}
+
+function sendResponseFromModal() {
+    const input = document.getElementById('response-input');
+    const response = input ? input.value.trim() : '';
+    
+    if (!response) {
+        alert('Please enter a response');
+        return;
+    }
+    
+    if (currentModalAgent && window.removeFromWaitingQueue) {
+        const waitingItems = window.getWaitingItems ? window.getWaitingItems() : [];
+        const item = waitingItems.find(i => i.id === currentModalAgent);
+        
+        if (item) {
+            const agent = window.agents.find(a => a.id === item.agentId);
+            
+            // Store the response (in production, this would send to the agent)
+            const responseLog = {
+                itemId: currentModalAgent,
+                agentId: item.agentId,
+                response: response,
+                timestamp: Date.now(),
+                title: item.title
+            };
+            
+            // Save to localStorage for now
+            const responses = JSON.parse(localStorage.getItem('calvinResponses') || '[]');
+            responses.push(responseLog);
+            localStorage.setItem('calvinResponses', JSON.stringify(responses));
+            
+            // Remove from waiting queue
+            window.removeFromWaitingQueue(currentModalAgent);
+            
+            if (agent) {
+                addToFeed(agent.name.toLowerCase(), `received response: "${response.substring(0, 30)}${response.length > 30 ? '...' : ''}"`, agent.color);
+            }
+            
+            // Show confirmation
+            showToast(`Response sent to ${agent ? agent.name : 'agent'}`);
+        }
+    }
+    closeModal();
+    renderWaitingItems();
+}
+
+function showToast(message) {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #238636;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 2000;
+        animation: slideIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
 
 // Legacy function for inline approve buttons (if any remain)
