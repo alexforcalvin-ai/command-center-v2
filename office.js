@@ -285,11 +285,11 @@ function drawAgent(agent) {
     ctx.fillStyle = agent.color;
     ctx.fillRect(x - 8, y - 20 + bobOffset, 16, 6);
     
-    // Name tag
+    // Name tag - full name
     ctx.fillStyle = agent.color;
-    ctx.font = '8px "Press Start 2P"';
+    ctx.font = '7px "Press Start 2P"';
     ctx.textAlign = 'center';
-    ctx.fillText(agent.name.substring(0, 4).toUpperCase(), x, y + 35);
+    ctx.fillText(agent.name.toUpperCase(), x, y + 35);
     
     // State indicator
     let indicatorColor;
