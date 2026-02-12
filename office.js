@@ -113,7 +113,7 @@ let waitingQueue = [];
 function loadAgentStates() {
     // Check version - if old version, reset to get new data structure
     const version = localStorage.getItem('commandCenterVersion');
-    const CURRENT_VERSION = '2.6'; // Fixed chair positions - around tables not on them, desks moved
+    const CURRENT_VERSION = '2.7'; // Added Leo to waiting queue, fixed chair positions, debug Team tab
     
     if (version !== CURRENT_VERSION) {
         // New version - reset everything to get new defaults
@@ -272,6 +272,35 @@ I need to know what's where before I can connect.`,
             whyItMatters: 'You mentioned wanting better financial visibility. I can\'t provide that without access. Once connected, I can have your first dashboard ready within 48 hours.',
             deadline: 'No hard deadline - but every day without access is a day without visibility',
             alternatives: 'If you\'re not comfortable giving me direct access, I can work with read-only API access, or just receive exported reports to analyze.'
+        },
+        {
+            id: 'leo-legal-pages',
+            agentId: 'leo',
+            createdAt: Date.now() - 900000, // 15 min ago
+            title: 'Gentle Pace Legal Pages Need Review',
+            desc: 'Terms of Service and Privacy Policy drafted - need your approval before App Store submission',
+            context: `I've drafted the legal pages for Gentle Pace Fitness. Before we can submit to the App Store, these need to be live.
+
+**What I've prepared:**
+- **Terms of Service:** Standard app terms, subscription billing, user conduct
+- **Privacy Policy:** HealthKit data handling (Apple requires specific disclosures), workout data storage, no data selling
+- **Age Requirements:** 13+ (standard for fitness apps with social features)
+
+**Key HealthKit disclosures:**
+- What data we collect: workout duration, calories, heart rate
+- How we use it: personalized workout recommendations, progress tracking
+- Where it's stored: your device + our secure cloud (Supabase)
+- Who sees it: only you, we don't share with third parties
+
+**Apple's requirements are strict** about HealthKit privacy. I've made sure we comply.`,
+            whatINeed: [
+                'Review Terms of Service draft',
+                'Review Privacy Policy draft',
+                'Confirm company name/address for legal footer'
+            ],
+            whyItMatters: 'App Store will reject us without proper legal pages. This is a hard blocker for launch.',
+            deadline: 'Need before App Store submission',
+            alternatives: 'Could use a legal template service, but custom-drafted is better for your specific use case.'
         }
     ];
 }
@@ -292,7 +321,7 @@ function getDefaultStates() {
         annie: { state: 'idle', task: '' },
         ivan: { state: 'working', task: 'Market analysis' },  // Has item in queue but working
         tara: { state: 'idle', task: '' },
-        leo: { state: 'withAlex', task: 'Policy review' },
+        leo: { state: 'waiting', task: 'Legal pages need review' },
         clara: { state: 'working', task: 'Support tickets' },
         simon: { state: 'withAlex', task: 'Security review' },
         henry: { state: 'idle', task: '' }

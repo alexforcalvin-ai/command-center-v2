@@ -46,11 +46,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tab buttons
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
+            const targetId = tab.dataset.tab;
+            console.log('Tab clicked:', targetId);
+            
+            // Remove active from all tabs and content
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
+            // Add active to clicked tab
             tab.classList.add('active');
-            document.getElementById(tab.dataset.tab).classList.add('active');
+            
+            // Find and activate target content
+            const targetContent = document.getElementById(targetId);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                console.log('Activated tab content:', targetId);
+            } else {
+                console.error('Tab content not found:', targetId);
+            }
         });
     });
     
