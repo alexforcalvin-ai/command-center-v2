@@ -1,63 +1,108 @@
 // Virtual Office - Pixel Art Canvas Engine
+// Real-time agent visualization
 
-const CANVAS_WIDTH = 1200;
-const CANVAS_HEIGHT = 700;
-const GRID_SIZE = 10;
+const CANVAS_WIDTH = 1400;
+const CANVAS_HEIGHT = 800;
 
-// Agent definitions with pixel colors
+// Agent definitions
 const agents = [
-    { id: 'alex', name: 'Alex', role: 'CEO', color: '#8b5cf6', x: 0, y: 0, targetX: 0, targetY: 0, state: 'working' },
-    { id: 'penny', name: 'Penny', role: 'Assistant', color: '#ec4899', x: 0, y: 0, targetX: 0, targetY: 0, state: 'waiting' },
-    { id: 'owen', name: 'Owen', role: 'Operations', color: '#f59e0b', x: 0, y: 0, targetX: 0, targetY: 0, state: 'working' },
-    { id: 'devin', name: 'Devin', role: 'Developer', color: '#10b981', x: 0, y: 0, targetX: 0, targetY: 0, state: 'working' },
-    { id: 'denise', name: 'Denise', role: 'Design', color: '#06b6d4', x: 0, y: 0, targetX: 0, targetY: 0, state: 'meeting' },
-    { id: 'molly', name: 'Molly', role: 'Medicare', color: '#ef4444', x: 0, y: 0, targetX: 0, targetY: 0, state: 'idle' },
-    { id: 'finn', name: 'Finn', role: 'Financial', color: '#22c55e', x: 0, y: 0, targetX: 0, targetY: 0, state: 'waiting' },
-    { id: 'mark', name: 'Mark', role: 'Marketing', color: '#3b82f6', x: 0, y: 0, targetX: 0, targetY: 0, state: 'working' },
-    { id: 'randy', name: 'Randy', role: 'R&D', color: '#a855f7', x: 0, y: 0, targetX: 0, targetY: 0, state: 'meeting' },
-    { id: 'annie', name: 'Annie', role: 'Analyst', color: '#f97316', x: 0, y: 0, targetX: 0, targetY: 0, state: 'idle' },
-    { id: 'ivan', name: 'Ivan', role: 'Trader', color: '#eab308', x: 0, y: 0, targetX: 0, targetY: 0, state: 'waiting' },
-    { id: 'tara', name: 'Tara', role: 'Travel', color: '#14b8a6', x: 0, y: 0, targetX: 0, targetY: 0, state: 'idle' },
-    { id: 'leo', name: 'Leo', role: 'Legal', color: '#6366f1', x: 0, y: 0, targetX: 0, targetY: 0, state: 'meeting' },
-    { id: 'clara', name: 'Clara', role: 'Support', color: '#f472b6', x: 0, y: 0, targetX: 0, targetY: 0, state: 'working' },
-    { id: 'simon', name: 'Simon', role: 'Security', color: '#64748b', x: 0, y: 0, targetX: 0, targetY: 0, state: 'meeting' },
-    { id: 'henry', name: 'Henry', role: 'Health', color: '#84cc16', x: 0, y: 0, targetX: 0, targetY: 0, state: 'idle' }
-];
+    { id: 'alex', name: 'Alex', role: 'CEO', color: '#8b5cf6' },
+    { id: 'penny', name: 'Penny', role: 'Assistant', color: '#ec4899' },
+    { id: 'owen', name: 'Owen', role: 'Operations', color: '#f59e0b' },
+    { id: 'devin', name: 'Devin', role: 'Developer', color: '#10b981' },
+    { id: 'denise', name: 'Denise', role: 'Design', color: '#06b6d4' },
+    { id: 'molly', name: 'Molly', role: 'Medicare', color: '#ef4444' },
+    { id: 'finn', name: 'Finn', role: 'Financial', color: '#22c55e' },
+    { id: 'mark', name: 'Mark', role: 'Marketing', color: '#3b82f6' },
+    { id: 'randy', name: 'Randy', role: 'R&D', color: '#a855f7' },
+    { id: 'annie', name: 'Annie', role: 'Analyst', color: '#f97316' },
+    { id: 'ivan', name: 'Ivan', role: 'Trader', color: '#eab308' },
+    { id: 'tara', name: 'Tara', role: 'Travel', color: '#14b8a6' },
+    { id: 'leo', name: 'Leo', role: 'Legal', color: '#6366f1' },
+    { id: 'clara', name: 'Clara', role: 'Support', color: '#f472b6' },
+    { id: 'simon', name: 'Simon', role: 'Security', color: '#64748b' },
+    { id: 'henry', name: 'Henry', role: 'Health', color: '#84cc16' }
+].map(a => ({ ...a, x: 100, y: 400, targetX: 100, targetY: 400, state: 'idle', task: '' }));
 
-// Office zones
-const zones = {
-    // Agent desks around perimeter
+// Bigger, better laid out zones
+const layout = {
+    // Individual desks - 2 rows of 8 at the top
     desks: [
-        { x: 40, y: 60 }, { x: 140, y: 60 }, { x: 240, y: 60 }, { x: 340, y: 60 },
-        { x: 40, y: 160 }, { x: 40, y: 260 }, { x: 40, y: 360 }, { x: 40, y: 460 },
-        { x: 1100, y: 60 }, { x: 1000, y: 60 }, { x: 900, y: 60 }, { x: 800, y: 60 },
-        { x: 1100, y: 160 }, { x: 1100, y: 260 }, { x: 1100, y: 360 }, { x: 1100, y: 460 }
+        // Top row
+        { x: 80, y: 80, agent: 'alex' },
+        { x: 180, y: 80, agent: 'penny' },
+        { x: 280, y: 80, agent: 'owen' },
+        { x: 380, y: 80, agent: 'devin' },
+        { x: 900, y: 80, agent: 'denise' },
+        { x: 1000, y: 80, agent: 'molly' },
+        { x: 1100, y: 80, agent: 'finn' },
+        { x: 1200, y: 80, agent: 'mark' },
+        // Second row
+        { x: 80, y: 180, agent: 'randy' },
+        { x: 180, y: 180, agent: 'annie' },
+        { x: 280, y: 180, agent: 'ivan' },
+        { x: 380, y: 180, agent: 'tara' },
+        { x: 900, y: 180, agent: 'leo' },
+        { x: 1000, y: 180, agent: 'clara' },
+        { x: 1100, y: 180, agent: 'simon' },
+        { x: 1200, y: 180, agent: 'henry' }
     ],
-    // Conference room center
-    conference: { x: 500, y: 200, w: 200, h: 150 },
-    conferenceSeats: [
-        { x: 520, y: 240 }, { x: 580, y: 240 }, { x: 640, y: 240 },
-        { x: 520, y: 310 }, { x: 580, y: 310 }, { x: 640, y: 310 }
-    ],
-    // Break room
-    breakRoom: { x: 150, y: 400, w: 150, h: 100 },
-    breakSeats: [
-        { x: 170, y: 430 }, { x: 220, y: 430 }, { x: 270, y: 430 },
-        { x: 170, y: 480 }, { x: 220, y: 480 }, { x: 270, y: 480 }
-    ],
-    // Calvin's office
-    calvinsOffice: { x: 450, y: 520, w: 300, h: 150 },
-    calvinDesk: { x: 580, y: 580 },
-    waitingQueue: [
-        { x: 470, y: 550 }, { x: 510, y: 550 }, { x: 550, y: 550 },
-        { x: 470, y: 600 }, { x: 510, y: 600 }
-    ],
-    insideCalvin: { x: 650, y: 580 }
+    
+    // Conference room - large central area
+    conference: {
+        x: 500, y: 280, w: 400, h: 200,
+        seats: [
+            { x: 560, y: 340 }, { x: 640, y: 340 }, { x: 720, y: 340 }, { x: 800, y: 340 },
+            { x: 560, y: 420 }, { x: 640, y: 420 }, { x: 720, y: 420 }, { x: 800, y: 420 }
+        ]
+    },
+    
+    // Break room - left side
+    breakRoom: {
+        x: 50, y: 320, w: 350, h: 200,
+        seats: [
+            { x: 100, y: 380 }, { x: 180, y: 380 }, { x: 260, y: 380 },
+            { x: 100, y: 460 }, { x: 180, y: 460 }, { x: 260, y: 460 },
+            { x: 340, y: 380 }, { x: 340, y: 460 }
+        ]
+    },
+    
+    // Calvin's office - bottom center, large
+    calvinsOffice: {
+        x: 450, y: 550, w: 500, h: 220,
+        desk: { x: 700, y: 660 },
+        queue: [
+            { x: 500, y: 620 }, { x: 560, y: 620 }, { x: 620, y: 620 },
+            { x: 500, y: 700 }, { x: 560, y: 700 }, { x: 620, y: 700 }
+        ],
+        inside: { x: 780, y: 660 }
+    }
 };
 
 let canvas, ctx;
 let animationFrame = 0;
 let selectedAgent = null;
+let lastStateUpdate = 0;
+
+// Simulated real-time states (in production, poll from backend)
+let agentStates = {
+    alex: { state: 'working', task: 'Coordinating team' },
+    penny: { state: 'waiting', task: 'Calendar approval needed' },
+    owen: { state: 'working', task: 'Processing applications' },
+    devin: { state: 'working', task: 'Building Command Center' },
+    denise: { state: 'meeting', task: 'Design review' },
+    molly: { state: 'idle', task: '' },
+    finn: { state: 'waiting', task: 'Needs QuickBooks access' },
+    mark: { state: 'working', task: 'Marketing plan' },
+    randy: { state: 'meeting', task: 'Research review' },
+    annie: { state: 'idle', task: '' },
+    ivan: { state: 'waiting', task: 'Trading credentials' },
+    tara: { state: 'idle', task: '' },
+    leo: { state: 'meeting', task: 'Policy review' },
+    clara: { state: 'working', task: 'Support tickets' },
+    simon: { state: 'meeting', task: 'Security review' },
+    henry: { state: 'idle', task: '' }
+};
 
 function initOffice() {
     canvas = document.getElementById('office-canvas');
@@ -67,49 +112,88 @@ function initOffice() {
     canvas.height = CANVAS_HEIGHT;
     ctx = canvas.getContext('2d');
     
-    // Position agents initially
-    positionAgents();
+    // Initial positioning
+    updateAgentPositions();
     
-    // Start animation loop
+    // Start game loop
     requestAnimationFrame(gameLoop);
     
     // Click handler
-    canvas.addEventListener('click', handleCanvasClick);
+    canvas.addEventListener('click', handleClick);
+    
+    // Simulate state changes every few seconds
+    setInterval(simulateStateChanges, 5000);
 }
 
-function positionAgents() {
-    let deskIdx = 0, confIdx = 0, breakIdx = 0, waitIdx = 0;
+function updateAgentPositions() {
+    // Count agents in each zone
+    let confIdx = 0, breakIdx = 0, waitIdx = 0;
     
     agents.forEach(agent => {
-        let pos;
+        const state = agentStates[agent.id];
+        agent.state = state.state;
+        agent.task = state.task;
+        
+        let target;
+        
         switch(agent.state) {
             case 'working':
-                pos = zones.desks[deskIdx % zones.desks.length];
-                deskIdx++;
+                // Go to their assigned desk
+                const desk = layout.desks.find(d => d.agent === agent.id);
+                target = desk || layout.desks[0];
                 break;
+                
             case 'meeting':
-                pos = zones.conferenceSeats[confIdx % zones.conferenceSeats.length];
+                target = layout.conference.seats[confIdx % layout.conference.seats.length];
                 confIdx++;
                 break;
+                
             case 'idle':
-                pos = zones.breakSeats[breakIdx % zones.breakSeats.length];
+                target = layout.breakRoom.seats[breakIdx % layout.breakRoom.seats.length];
                 breakIdx++;
                 break;
+                
             case 'waiting':
-                pos = zones.waitingQueue[waitIdx % zones.waitingQueue.length];
+                target = layout.calvinsOffice.queue[waitIdx % layout.calvinsOffice.queue.length];
                 waitIdx++;
                 break;
+                
             case 'talking':
-                pos = zones.insideCalvin;
+                target = layout.calvinsOffice.inside;
                 break;
+                
             default:
-                pos = zones.desks[0];
+                target = layout.breakRoom.seats[0];
         }
-        agent.x = pos.x;
-        agent.y = pos.y;
-        agent.targetX = pos.x;
-        agent.targetY = pos.y;
+        
+        agent.targetX = target.x;
+        agent.targetY = target.y;
     });
+}
+
+function simulateStateChanges() {
+    // Randomly change some agent states to simulate real activity
+    const states = ['working', 'meeting', 'idle', 'waiting'];
+    const tasks = {
+        working: ['Processing tasks', 'Analyzing data', 'Writing report', 'Reviewing docs'],
+        meeting: ['Team sync', 'Project review', 'Planning session', 'Collaboration'],
+        idle: ['', 'Coffee break', 'Stretching', ''],
+        waiting: ['Needs approval', 'Question for Calvin', 'Blocked on decision', 'Awaiting input']
+    };
+    
+    // Change 1-3 random agents
+    const numChanges = Math.floor(Math.random() * 3) + 1;
+    
+    for (let i = 0; i < numChanges; i++) {
+        const agent = agents[Math.floor(Math.random() * agents.length)];
+        const newState = states[Math.floor(Math.random() * states.length)];
+        const taskList = tasks[newState];
+        const newTask = taskList[Math.floor(Math.random() * taskList.length)];
+        
+        agentStates[agent.id] = { state: newState, task: newTask };
+    }
+    
+    updateAgentPositions();
 }
 
 function gameLoop() {
@@ -120,213 +204,283 @@ function gameLoop() {
 }
 
 function update() {
-    // Move agents toward targets
+    // Smooth movement toward targets
     agents.forEach(agent => {
         const dx = agent.targetX - agent.x;
         const dy = agent.targetY - agent.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
-        if (dist > 2) {
-            agent.x += (dx / dist) * 2;
-            agent.y += (dy / dist) * 2;
+        if (dist > 3) {
+            // Move toward target
+            const speed = 2.5;
+            agent.x += (dx / dist) * speed;
+            agent.y += (dy / dist) * speed;
+            agent.moving = true;
         } else {
             agent.x = agent.targetX;
             agent.y = agent.targetY;
+            agent.moving = false;
         }
     });
 }
 
 function render() {
     // Clear
-    ctx.fillStyle = '#0d0d1a';
+    ctx.fillStyle = '#0a0a15';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
-    // Draw floor grid (subtle)
-    ctx.strokeStyle = '#151525';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < CANVAS_WIDTH; x += 40) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, CANVAS_HEIGHT);
-        ctx.stroke();
-    }
-    for (let y = 0; y < CANVAS_HEIGHT; y += 40) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(CANVAS_WIDTH, y);
-        ctx.stroke();
+    // Floor pattern
+    ctx.fillStyle = '#0f0f1a';
+    for (let x = 0; x < CANVAS_WIDTH; x += 50) {
+        for (let y = 0; y < CANVAS_HEIGHT; y += 50) {
+            if ((x + y) % 100 === 0) {
+                ctx.fillRect(x, y, 50, 50);
+            }
+        }
     }
     
     // Draw zones
-    drawZones();
+    drawDesks();
+    drawConferenceRoom();
+    drawBreakRoom();
+    drawCalvinsOffice();
     
-    // Draw agents
-    agents.forEach(agent => drawAgent(agent));
+    // Draw agents (sorted by Y for depth)
+    [...agents].sort((a, b) => a.y - b.y).forEach(agent => drawAgent(agent));
 }
 
-function drawZones() {
-    // Desks
-    zones.desks.forEach((desk, i) => {
+function drawDesks() {
+    layout.desks.forEach(desk => {
+        // Desk
         ctx.fillStyle = '#1a1a2e';
-        ctx.fillRect(desk.x - 25, desk.y - 20, 50, 40);
-        ctx.strokeStyle = '#30363d';
-        ctx.strokeRect(desk.x - 25, desk.y - 20, 50, 40);
+        ctx.fillRect(desk.x - 30, desk.y - 20, 60, 40);
+        ctx.strokeStyle = '#2a2a4e';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(desk.x - 30, desk.y - 20, 60, 40);
         
-        // Computer
+        // Monitor
         ctx.fillStyle = '#2a2a4e';
-        ctx.fillRect(desk.x - 10, desk.y - 15, 20, 15);
-        ctx.fillStyle = '#00ff41';
-        ctx.fillRect(desk.x - 8, desk.y - 13, 16, 10);
+        ctx.fillRect(desk.x - 12, desk.y - 15, 24, 18);
+        ctx.fillStyle = '#00cc33';
+        ctx.fillRect(desk.x - 10, desk.y - 13, 20, 14);
+        
+        // Name plate
+        const agent = agents.find(a => a.id === desk.agent);
+        if (agent) {
+            ctx.fillStyle = '#666';
+            ctx.font = '6px "Press Start 2P"';
+            ctx.textAlign = 'center';
+            ctx.fillText(agent.name, desk.x, desk.y + 30);
+        }
     });
+}
+
+function drawConferenceRoom() {
+    const c = layout.conference;
     
-    // Conference room
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(zones.conference.x, zones.conference.y, zones.conference.w, zones.conference.h);
+    // Room
+    ctx.fillStyle = '#12122a';
+    ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.strokeStyle = '#3b82f6';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(zones.conference.x, zones.conference.y, zones.conference.w, zones.conference.h);
+    ctx.lineWidth = 4;
+    ctx.strokeRect(c.x, c.y, c.w, c.h);
     
-    // Conference table
+    // Table
     ctx.fillStyle = '#2a2a4e';
-    ctx.fillRect(zones.conference.x + 30, zones.conference.y + 40, 140, 70);
+    ctx.fillRect(c.x + 80, c.y + 60, 240, 80);
+    ctx.strokeStyle = '#3a3a5e';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(c.x + 80, c.y + 60, 240, 80);
     
     // Label
     ctx.fillStyle = '#3b82f6';
-    ctx.font = '10px "Press Start 2P"';
-    ctx.fillText('CONFERENCE', zones.conference.x + 40, zones.conference.y + 20);
+    ctx.font = '12px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText('CONFERENCE ROOM', c.x + c.w/2, c.y + 25);
+}
+
+function drawBreakRoom() {
+    const b = layout.breakRoom;
     
-    // Break room
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(zones.breakRoom.x, zones.breakRoom.y, zones.breakRoom.w, zones.breakRoom.h);
-    ctx.strokeStyle = '#8b949e';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(zones.breakRoom.x, zones.breakRoom.y, zones.breakRoom.w, zones.breakRoom.h);
+    // Room
+    ctx.fillStyle = '#121520';
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+    ctx.strokeStyle = '#6b7280';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(b.x, b.y, b.w, b.h);
     
     // Couch
     ctx.fillStyle = '#4a4a6e';
-    ctx.fillRect(zones.breakRoom.x + 20, zones.breakRoom.y + 50, 60, 30);
+    ctx.fillRect(b.x + 20, b.y + 100, 120, 40);
     
-    // Coffee
+    // Coffee table
+    ctx.fillStyle = '#3a3a4e';
+    ctx.fillRect(b.x + 160, b.y + 90, 60, 50);
+    
+    // Coffee machine
     ctx.fillStyle = '#8b4513';
-    ctx.fillRect(zones.breakRoom.x + 100, zones.breakRoom.y + 30, 30, 20);
+    ctx.fillRect(b.x + 280, b.y + 40, 40, 60);
+    ctx.fillStyle = '#ff6b35';
+    ctx.fillRect(b.x + 285, b.y + 50, 10, 10);
     
-    ctx.fillStyle = '#8b949e';
-    ctx.font = '8px "Press Start 2P"';
-    ctx.fillText('BREAK ROOM', zones.breakRoom.x + 20, zones.breakRoom.y + 20);
+    // Label
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '12px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText('BREAK ROOM', b.x + b.w/2, b.y + 25);
+}
+
+function drawCalvinsOffice() {
+    const o = layout.calvinsOffice;
     
-    // Calvin's office
-    ctx.fillStyle = '#1a1020';
-    ctx.fillRect(zones.calvinsOffice.x, zones.calvinsOffice.y, zones.calvinsOffice.w, zones.calvinsOffice.h);
+    // Room
+    ctx.fillStyle = '#1a1015';
+    ctx.fillRect(o.x, o.y, o.w, o.h);
     ctx.strokeStyle = '#f85149';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(zones.calvinsOffice.x, zones.calvinsOffice.y, zones.calvinsOffice.w, zones.calvinsOffice.h);
+    ctx.lineWidth = 4;
+    ctx.strokeRect(o.x, o.y, o.w, o.h);
     
     // Calvin's desk
     ctx.fillStyle = '#3a2a4e';
-    ctx.fillRect(zones.calvinDesk.x - 30, zones.calvinDesk.y - 15, 60, 30);
+    ctx.fillRect(o.desk.x - 50, o.desk.y - 25, 100, 50);
     
-    // Calvin avatar
+    // Calvin
     ctx.fillStyle = '#ffd700';
     ctx.beginPath();
-    ctx.arc(zones.calvinDesk.x, zones.calvinDesk.y, 15, 0, Math.PI * 2);
+    ctx.arc(o.desk.x, o.desk.y, 20, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#0a0a1a';
-    ctx.font = 'bold 12px Arial';
+    ctx.strokeStyle = '#ffed4a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.fillStyle = '#1a1015';
+    ctx.font = 'bold 16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('C', zones.calvinDesk.x, zones.calvinDesk.y + 4);
+    ctx.fillText('C', o.desk.x, o.desk.y + 6);
     
-    ctx.fillStyle = '#f85149';
-    ctx.font = '10px "Press Start 2P"';
-    ctx.textAlign = 'left';
-    ctx.fillText("CALVIN'S OFFICE", zones.calvinsOffice.x + 60, zones.calvinsOffice.y + 20);
-    
-    // Queue line
+    // Queue markers
     ctx.setLineDash([5, 5]);
     ctx.strokeStyle = '#f85149';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(zones.calvinsOffice.x + 20, zones.calvinsOffice.y + 40);
-    ctx.lineTo(zones.calvinsOffice.x + 120, zones.calvinsOffice.y + 40);
+    ctx.moveTo(o.x + 30, o.y + 60);
+    ctx.lineTo(o.x + 200, o.y + 60);
     ctx.stroke();
     ctx.setLineDash([]);
     
-    ctx.fillStyle = '#8b949e';
-    ctx.font = '6px "Press Start 2P"';
-    ctx.fillText('QUEUE', zones.calvinsOffice.x + 40, zones.calvinsOffice.y + 50);
+    // Labels
+    ctx.fillStyle = '#f85149';
+    ctx.font = '12px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText("CALVIN'S OFFICE", o.x + o.w/2, o.y + 25);
+    
+    ctx.fillStyle = '#888';
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillText('WAITING LINE', o.x + 115, o.y + 80);
 }
 
 function drawAgent(agent) {
-    const x = agent.x;
-    const y = agent.y;
-    const bobOffset = Math.sin(animationFrame / 10 + agents.indexOf(agent)) * 2;
+    const x = Math.round(agent.x);
+    const y = Math.round(agent.y);
+    
+    // Walking animation
+    const walkCycle = agent.moving ? Math.floor(animationFrame / 8) % 4 : 0;
+    const bobOffset = agent.moving ? Math.sin(animationFrame / 5) * 3 : Math.sin(animationFrame / 20) * 1;
     
     // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.beginPath();
-    ctx.ellipse(x, y + 18, 12, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + 22, 14, 5, 0, 0, Math.PI * 2);
     ctx.fill();
+    
+    // Legs (if walking)
+    if (agent.moving) {
+        ctx.fillStyle = '#333';
+        const legOffset = walkCycle < 2 ? 3 : -3;
+        ctx.fillRect(x - 5 + legOffset, y + 8, 4, 12);
+        ctx.fillRect(x + 1 - legOffset, y + 8, 4, 12);
+    } else {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(x - 5, y + 8, 4, 12);
+        ctx.fillRect(x + 1, y + 8, 4, 12);
+    }
     
     // Body
     ctx.fillStyle = agent.color;
-    ctx.fillRect(x - 8, y - 5 + bobOffset, 16, 20);
+    ctx.fillRect(x - 10, y - 8 + bobOffset, 20, 20);
     
     // Head
     ctx.fillStyle = '#ffd5b8';
     ctx.beginPath();
-    ctx.arc(x, y - 12 + bobOffset, 10, 0, Math.PI * 2);
+    ctx.arc(x, y - 16 + bobOffset, 12, 0, Math.PI * 2);
     ctx.fill();
     
     // Eyes
-    ctx.fillStyle = '#0a0a1a';
-    ctx.fillRect(x - 4, y - 14 + bobOffset, 3, 3);
-    ctx.fillRect(x + 1, y - 14 + bobOffset, 3, 3);
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(x - 5, y - 18 + bobOffset, 3, 4);
+    ctx.fillRect(x + 2, y - 18 + bobOffset, 3, 4);
     
-    // Hair (color matches agent)
+    // Hair
     ctx.fillStyle = agent.color;
-    ctx.fillRect(x - 8, y - 20 + bobOffset, 16, 6);
-    
-    // Name tag - full name
-    ctx.fillStyle = agent.color;
-    ctx.font = '7px "Press Start 2P"';
-    ctx.textAlign = 'center';
-    ctx.fillText(agent.name.toUpperCase(), x, y + 35);
-    
-    // State indicator
-    let indicatorColor;
-    switch(agent.state) {
-        case 'working': indicatorColor = '#00ff41'; break;
-        case 'meeting': indicatorColor = '#3b82f6'; break;
-        case 'waiting': indicatorColor = '#f85149'; break;
-        case 'talking': indicatorColor = '#ffd700'; break;
-        default: indicatorColor = '#8b949e';
-    }
-    
-    ctx.fillStyle = indicatorColor;
     ctx.beginPath();
-    ctx.arc(x + 12, y - 20 + bobOffset, 4, 0, Math.PI * 2);
+    ctx.arc(x, y - 22 + bobOffset, 8, Math.PI, 0);
     ctx.fill();
     
-    // Highlight selected
+    // Name
+    ctx.fillStyle = '#fff';
+    ctx.font = '8px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText(agent.name.toUpperCase(), x, y + 42);
+    
+    // State indicator
+    let stateColor;
+    switch(agent.state) {
+        case 'working': stateColor = '#00ff41'; break;
+        case 'meeting': stateColor = '#3b82f6'; break;
+        case 'waiting': stateColor = '#f85149'; break;
+        case 'talking': stateColor = '#ffd700'; break;
+        default: stateColor = '#6b7280';
+    }
+    
+    ctx.fillStyle = stateColor;
+    ctx.beginPath();
+    ctx.arc(x + 14, y - 24 + bobOffset, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Task bubble if working/waiting
+    if (agent.task && (agent.state === 'working' || agent.state === 'waiting')) {
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        const textWidth = ctx.measureText(agent.task).width;
+        ctx.fillRect(x - textWidth/2 - 5, y - 50 + bobOffset, textWidth + 10, 16);
+        ctx.fillStyle = '#fff';
+        ctx.font = '6px "Press Start 2P"';
+        ctx.fillText(agent.task, x, y - 40 + bobOffset);
+    }
+    
+    // Selection highlight
     if (selectedAgent === agent) {
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
-        ctx.strokeRect(x - 15, y - 25 + bobOffset, 30, 55);
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(x - 18, y - 35 + bobOffset, 36, 70);
+        ctx.setLineDash([]);
     }
 }
 
-function handleCanvasClick(e) {
+function handleClick(e) {
     const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
     
     selectedAgent = null;
-    
     agents.forEach(agent => {
-        const dx = clickX - agent.x;
-        const dy = clickY - agent.y;
-        if (Math.sqrt(dx*dx + dy*dy) < 20) {
-            selectedAgent = agent;
-        }
+        const dist = Math.sqrt((clickX - agent.x) ** 2 + (clickY - agent.y) ** 2);
+        if (dist < 25) selectedAgent = agent;
     });
     
     updateInfoPanel();
@@ -337,62 +491,31 @@ function updateInfoPanel() {
     if (!panel) return;
     
     if (selectedAgent) {
-        const stateText = {
-            'working': '💻 Working at desk',
-            'meeting': '🤝 In conference room',
-            'waiting': '⏳ Waiting on Calvin',
-            'talking': '💬 Talking to Calvin',
-            'idle': '☕ On break'
+        const states = {
+            working: '💻 Working at desk',
+            meeting: '🤝 In conference room',
+            waiting: '⏳ Waiting on Calvin',
+            talking: '💬 With Calvin',
+            idle: '☕ On break'
         };
         panel.innerHTML = `
-            <span style="color: ${selectedAgent.color}">${selectedAgent.name}</span> - ${selectedAgent.role}<br>
-            ${stateText[selectedAgent.state] || selectedAgent.state}
+            <span style="color:${selectedAgent.color};font-size:12px;">${selectedAgent.name}</span>
+            <span style="color:#888;font-size:10px;"> — ${selectedAgent.role}</span><br>
+            <span style="font-size:10px;">${states[selectedAgent.state]}</span>
+            ${selectedAgent.task ? `<br><span style="color:#aaa;font-size:8px;">${selectedAgent.task}</span>` : ''}
         `;
     } else {
         panel.textContent = 'Click an agent to see details';
     }
 }
 
-// Move agent to new state
-function moveAgentTo(agentId, newState) {
-    const agent = agents.find(a => a.id === agentId);
-    if (!agent) return;
-    
-    agent.state = newState;
-    
-    // Calculate new position
-    let pos;
-    switch(newState) {
-        case 'working':
-            const deskIdx = agents.filter(a => a.state === 'working').indexOf(agent);
-            pos = zones.desks[deskIdx % zones.desks.length];
-            break;
-        case 'meeting':
-            const confIdx = agents.filter(a => a.state === 'meeting').indexOf(agent);
-            pos = zones.conferenceSeats[confIdx % zones.conferenceSeats.length];
-            break;
-        case 'idle':
-            const breakIdx = agents.filter(a => a.state === 'idle').indexOf(agent);
-            pos = zones.breakSeats[breakIdx % zones.breakSeats.length];
-            break;
-        case 'waiting':
-            const waitIdx = agents.filter(a => a.state === 'waiting').indexOf(agent);
-            pos = zones.waitingQueue[waitIdx % zones.waitingQueue.length];
-            break;
-        case 'talking':
-            pos = zones.insideCalvin;
-            break;
-    }
-    
-    if (pos) {
-        agent.targetX = pos.x;
-        agent.targetY = pos.y;
-    }
-}
+// Public API
+window.moveAgentTo = function(agentId, newState, task = '') {
+    agentStates[agentId] = { state: newState, task };
+    updateAgentPositions();
+};
 
-// Initialize when DOM ready
-document.addEventListener('DOMContentLoaded', initOffice);
-
-// Export for use in app.js
-window.moveAgentTo = moveAgentTo;
 window.agents = agents;
+window.agentStates = agentStates;
+
+document.addEventListener('DOMContentLoaded', initOffice);

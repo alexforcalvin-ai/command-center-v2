@@ -240,6 +240,8 @@ body {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     background: #0d0d1a;
+    max-width: 100%;
+    height: auto;
 }
 
 #agent-info-panel {
