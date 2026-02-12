@@ -12,6 +12,7 @@
     <nav class="tabs">
         <button class="tab active" data-tab="virtual-office">🏢 Virtual Office</button>
         <button class="tab" data-tab="command-center">📊 Command Center</button>
+        <button class="tab" data-tab="team">👥 Team</button>
     </nav>
 
     <!-- Command Center Tab -->
@@ -50,6 +51,18 @@
         <div id="agent-info-panel">Click an agent to see details</div>
     </div>
 
+    <!-- Team Tab -->
+    <div id="team" class="tab-content">
+        <div class="team-header">
+            <h2 class="team-title">👥 The Team</h2>
+            <div class="period-toggle">
+                <button class="period-btn active" data-period="24h">24h</button>
+                <button class="period-btn" data-period="7d">7 days</button>
+            </div>
+        </div>
+        <div id="team-list" class="team-grid"></div>
+    </div>
+
     <!-- Detail Modal -->
     <div id="detail-modal" class="modal hidden">
         <div class="modal-content">
@@ -60,5 +73,6 @@
 
     <script src="office.js"></script>
     <script src="app.js"></script>
+    <script src="team.js"></script>
 </body>
 </html>

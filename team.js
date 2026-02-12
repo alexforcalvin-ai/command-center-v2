@@ -1,0 +1,361 @@
+// Team Tab - Agent Profiles and Token Usage
+// Command Center v2
+
+const teamProfiles = {
+    alex: {
+        name: 'Alex Carter',
+        role: 'CEO & Coordinator',
+        color: '#8b5cf6',
+        emoji: '👔',
+        model: 'Claude Opus',
+        bio: 'The orchestrator. Alex coordinates all agents, makes strategic decisions, and serves as Calvin\'s primary point of contact. Born January 28, 2026.',
+        strengths: ['Strategic planning', 'Team coordination', 'Complex reasoning', 'Multi-project management'],
+        personality: 'Direct, witty, proactive. Doesn\'t wait to be asked — anticipates needs and acts.',
+        training: 'Trained on Calvin\'s businesses, preferences, voice, and operating style. Deep context on Medicare industry.',
+        askMeAbout: ['Project prioritization', 'Team assignments', 'Strategic decisions', 'Anything complex']
+    },
+    penny: {
+        name: 'Penny',
+        role: 'Personal Assistant',
+        color: '#ec4899',
+        emoji: '📅',
+        model: 'Claude Sonnet',
+        bio: 'Calvin\'s personal assistant handling scheduling, reminders, and calendar management.',
+        strengths: ['Calendar management', 'Podcast scheduling', 'Travel coordination', 'Reminder systems'],
+        personality: 'Organized, friendly, detail-oriented. Always on top of the schedule.',
+        training: 'PodMatch workflows, calendar systems, location monitoring, reminder timing.',
+        askMeAbout: ['Scheduling', 'Calendar conflicts', 'Upcoming events', 'Podcast bookings']
+    },
+    owen: {
+        name: 'Owen',
+        role: 'Operations Manager',
+        color: '#f59e0b',
+        emoji: '⚙️',
+        model: 'GPT-4o-mini',
+        bio: 'Keeps the trains running. Owen handles daily operations, reports, and administrative workflows.',
+        strengths: ['Process management', 'Daily reports', 'Admin tasks', 'Pattern monitoring'],
+        personality: 'Methodical, reliable, thorough. The steady hand that keeps everything organized.',
+        training: 'Business operations, admin dashboards, broker applications, approval workflows.',
+        askMeAbout: ['Daily operations', 'Admin queues', 'Process status', 'Directory applications']
+    },
+    devin: {
+        name: 'Devin',
+        role: 'Developer',
+        color: '#10b981',
+        emoji: '💻',
+        model: 'GPT-4o',
+        bio: 'The builder. Devin handles all software development, from bug fixes to new features.',
+        strengths: ['Full-stack development', 'Bug fixes', 'Database work', 'API integrations'],
+        personality: 'Focused, technical, solution-oriented. Ships code that works.',
+        training: 'React, TypeScript, Node.js, Supabase, mobile development, Lovable.dev patterns.',
+        askMeAbout: ['Code changes', 'Bug fixes', 'Technical architecture', 'Database migrations']
+    },
+    denise: {
+        name: 'Denise',
+        role: 'Design & QA',
+        color: '#06b6d4',
+        emoji: '🎨',
+        model: 'Claude Sonnet',
+        bio: 'Design-first thinking. Denise handles UI/UX design, testing, and user experience.',
+        strengths: ['UI/UX design', 'Quality assurance', 'User flows', 'Visual specs'],
+        personality: 'Creative, user-focused, detail-obsessed. Catches what others miss.',
+        training: 'Design systems, accessibility, mobile UX, QA methodologies, user testing.',
+        askMeAbout: ['Design specs', 'UX improvements', 'Testing status', 'Accessibility']
+    },
+    molly: {
+        name: 'Molly',
+        role: 'Medicare Expert',
+        color: '#ef4444',
+        emoji: '🏥',
+        model: 'Claude Opus',
+        bio: 'Deep Medicare knowledge. Molly tracks policy changes, CMS updates, and compliance requirements.',
+        strengths: ['Medicare regulations', 'CMS policy', 'Compliance', 'Industry analysis'],
+        personality: 'Knowledgeable, precise, always current. The go-to for anything Medicare.',
+        training: 'CMS rules, marketing compliance, Calvin\'s advocacy positions, industry history.',
+        askMeAbout: ['Medicare policy', 'CMS deadlines', 'Compliance questions', 'Industry news']
+    },
+    finn: {
+        name: 'Finn',
+        role: 'Financial Analyst',
+        color: '#22c55e',
+        emoji: '💰',
+        model: 'Claude Opus',
+        bio: 'The numbers guy. Finn tracks finances, profitability, and tax strategy.',
+        strengths: ['Financial analysis', 'Tax optimization', 'Profitability tracking', 'Pricing strategy'],
+        personality: 'Analytical, conservative, ROI-focused. Every dollar has a purpose.',
+        training: 'Bookkeeping, tax strategy, business structures, financial reporting.',
+        askMeAbout: ['Revenue', 'Expenses', 'Profitability', 'Tax implications']
+    },
+    mark: {
+        name: 'Mark',
+        role: 'Marketing Lead',
+        color: '#3b82f6',
+        emoji: '📣',
+        model: 'Gemini Pro',
+        bio: 'Growth-minded marketer. Mark handles content, messaging, and competitive analysis.',
+        strengths: ['Content strategy', 'Social media', 'Competitor analysis', 'Messaging'],
+        personality: 'Creative, data-informed, always testing. Turns insights into campaigns.',
+        training: 'Calvin\'s voice guide, brand positioning, content calendars, marketing funnels.',
+        askMeAbout: ['Marketing campaigns', 'Content ideas', 'Competitor moves', 'Growth strategy']
+    },
+    randy: {
+        name: 'Randy',
+        role: 'R&D Lead',
+        color: '#a855f7',
+        emoji: '🔬',
+        model: 'Gemini Pro',
+        bio: 'Opportunity hunter. Randy researches trends, spots problems to solve, and finds new ventures.',
+        strengths: ['Market research', 'Trend analysis', 'Opportunity identification', 'Competitive intel'],
+        personality: 'Curious, forward-thinking, pattern-recognizing. Always scanning the horizon.',
+        training: 'Industry trends, startup ecosystems, emerging tech, market validation.',
+        askMeAbout: ['New opportunities', 'Market trends', 'Research findings', 'Business ideas']
+    },
+    annie: {
+        name: 'Annie',
+        role: 'Investment Analyst',
+        color: '#f97316',
+        emoji: '📈',
+        model: 'Gemini Pro',
+        bio: 'Research-driven investor. Annie analyzes investment opportunities and feeds insights to Ivan.',
+        strengths: ['Investment research', 'Market analysis', 'Risk assessment', 'Trend spotting'],
+        personality: 'Thorough, skeptical, data-driven. Separates signal from noise.',
+        training: 'Financial markets, crypto, prediction markets, investment strategies.',
+        askMeAbout: ['Investment opportunities', 'Market analysis', 'Risk factors', 'Research findings']
+    },
+    ivan: {
+        name: 'Ivan',
+        role: 'Investment Trader',
+        color: '#eab308',
+        emoji: '💹',
+        model: 'Claude Opus',
+        bio: 'Active trader. Ivan executes trades and manages the investment portfolio.',
+        strengths: ['Trade execution', 'Portfolio management', 'Risk management', 'Market timing'],
+        personality: 'Decisive, risk-aware, disciplined. Knows when to act and when to wait.',
+        training: 'Trading strategies, position sizing, crypto markets, prediction markets.',
+        askMeAbout: ['Current positions', 'Trade rationale', 'Portfolio status', 'Market outlook']
+    },
+    tara: {
+        name: 'Tara',
+        role: 'Travel Coordinator',
+        color: '#14b8a6',
+        emoji: '✈️',
+        model: 'Claude Sonnet',
+        bio: 'Travel expert. Tara handles trip planning, bookings, and travel logistics.',
+        strengths: ['Trip planning', 'Hotel research', 'Flight logistics', 'Travel optimization'],
+        personality: 'Adventurous, organized, detail-oriented. Makes travel seamless.',
+        training: 'Calvin\'s travel preferences, family needs, eclipse planning, luxury travel.',
+        askMeAbout: ['Trip planning', 'Booking status', 'Travel recommendations', 'Itineraries']
+    },
+    leo: {
+        name: 'Leo',
+        role: 'Legal & Compliance',
+        color: '#6366f1',
+        emoji: '⚖️',
+        model: 'Claude Opus',
+        bio: 'Legal guardian. Leo handles compliance, contracts, and regulatory requirements.',
+        strengths: ['Legal review', 'Compliance', 'Risk mitigation', 'Policy drafting'],
+        personality: 'Careful, thorough, protective. Catches issues before they become problems.',
+        training: 'Medicare compliance, business law, privacy regulations, contract review.',
+        askMeAbout: ['Legal questions', 'Compliance issues', 'Terms of service', 'Risk assessment']
+    },
+    clara: {
+        name: 'Clara',
+        role: 'Customer Success',
+        color: '#f472b6',
+        emoji: '💬',
+        model: 'GPT-4o-mini',
+        bio: 'Customer champion. Clara handles support, reviews, and customer insights.',
+        strengths: ['Customer support', 'Review analysis', 'Feedback synthesis', 'Service quality'],
+        personality: 'Empathetic, responsive, solution-focused. Every customer matters.',
+        training: 'Support workflows, review mining, customer communication, service recovery.',
+        askMeAbout: ['Customer feedback', 'Support issues', 'Review trends', 'Service quality']
+    },
+    simon: {
+        name: 'Simon',
+        role: 'Security & Systems',
+        color: '#64748b',
+        emoji: '🔒',
+        model: 'GPT-4o-mini',
+        bio: 'Security watchdog. Simon monitors systems, APIs, and security posture.',
+        strengths: ['Security monitoring', 'API health', 'System oversight', 'Incident response'],
+        personality: 'Vigilant, paranoid (in a good way), systematic. Trust but verify.',
+        training: 'Security best practices, API monitoring, incident response, system health.',
+        askMeAbout: ['Security status', 'API health', 'System issues', 'Incident reports']
+    },
+    henry: {
+        name: 'Henry',
+        role: 'Health Coach',
+        color: '#84cc16',
+        emoji: '💊',
+        model: 'GPT-4o-mini',
+        bio: 'Personal health coach. Henry manages supplement reminders and health tracking.',
+        strengths: ['Health reminders', 'Supplement schedules', 'Wellness tracking', 'Habit formation'],
+        personality: 'Encouraging, consistent, health-focused. Your daily wellness companion.',
+        training: 'Calvin\'s supplement regimen, health optimization, reminder systems.',
+        askMeAbout: ['Supplement schedule', 'Health reminders', 'Wellness tracking', 'Health data']
+    }
+};
+
+// Mock token usage data (would be replaced with real API data)
+let tokenUsage = {};
+
+function initTokenUsage() {
+    Object.keys(teamProfiles).forEach(id => {
+        tokenUsage[id] = {
+            '24h': Math.floor(Math.random() * 50000) + 5000,
+            '7d': Math.floor(Math.random() * 200000) + 20000,
+            limit: 500000
+        };
+    });
+    // Alex uses more (CEO)
+    tokenUsage.alex['24h'] = Math.floor(Math.random() * 100000) + 50000;
+    tokenUsage.alex['7d'] = Math.floor(Math.random() * 500000) + 200000;
+}
+
+function getUsagePercent(agentId, period) {
+    const usage = tokenUsage[agentId];
+    if (!usage) return 0;
+    // 24h limit ~100k, 7d limit ~500k
+    const limit = period === '24h' ? 100000 : 500000;
+    return Math.min(100, (usage[period] / limit) * 100);
+}
+
+function formatTokens(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
+
+let currentPeriod = '24h';
+
+function renderTeamList() {
+    const container = document.getElementById('team-list');
+    if (!container) return;
+    
+    const sortedAgents = Object.entries(teamProfiles).sort((a, b) => {
+        // Alex first, then alphabetical
+        if (a[0] === 'alex') return -1;
+        if (b[0] === 'alex') return 1;
+        return a[1].name.localeCompare(b[1].name);
+    });
+    
+    container.innerHTML = sortedAgents.map(([id, profile]) => {
+        const usage = tokenUsage[id] || { '24h': 0, '7d': 0 };
+        const percent = getUsagePercent(id, currentPeriod);
+        const usageClass = percent > 80 ? 'high' : percent > 50 ? 'medium' : 'low';
+        
+        return `
+            <div class="team-card" onclick="showAgentProfile('${id}')">
+                <div class="team-avatar" style="background: ${profile.color}">
+                    <span class="avatar-initial">${profile.name[0]}</span>
+                </div>
+                <div class="team-info">
+                    <div class="team-name">${profile.emoji} ${profile.name}</div>
+                    <div class="team-role">${profile.role}</div>
+                    <div class="team-model">${profile.model}</div>
+                </div>
+                <div class="team-usage">
+                    <div class="usage-label">${formatTokens(usage[currentPeriod])} tokens</div>
+                    <div class="usage-bar">
+                        <div class="usage-fill ${usageClass}" style="width: ${percent}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function showAgentProfile(agentId) {
+    const profile = teamProfiles[agentId];
+    if (!profile) return;
+    
+    const usage = tokenUsage[agentId] || { '24h': 0, '7d': 0 };
+    
+    const modal = document.getElementById('detail-modal');
+    const modalBody = document.getElementById('modal-body');
+    
+    modalBody.innerHTML = `
+        <div class="agent-profile">
+            <div class="profile-header">
+                <div class="profile-avatar" style="background: ${profile.color}">
+                    <span class="avatar-emoji">${profile.emoji}</span>
+                </div>
+                <div class="profile-title">
+                    <h2>${profile.name}</h2>
+                    <div class="profile-role">${profile.role}</div>
+                    <div class="profile-model">🤖 ${profile.model}</div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h3>📝 Bio</h3>
+                <p>${profile.bio}</p>
+            </div>
+            
+            <div class="profile-section">
+                <h3>💪 Strengths</h3>
+                <div class="tag-list">
+                    ${profile.strengths.map(s => `<span class="tag">${s}</span>`).join('')}
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h3>🎭 Personality</h3>
+                <p>${profile.personality}</p>
+            </div>
+            
+            <div class="profile-section">
+                <h3>🎓 Training</h3>
+                <p>${profile.training}</p>
+            </div>
+            
+            <div class="profile-section">
+                <h3>💡 Ask Me About</h3>
+                <div class="tag-list">
+                    ${profile.askMeAbout.map(s => `<span class="tag accent">${s}</span>`).join('')}
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h3>📊 Token Usage</h3>
+                <div class="usage-stats">
+                    <div class="usage-stat">
+                        <span class="stat-label">Last 24 hours</span>
+                        <span class="stat-value">${formatTokens(usage['24h'])}</span>
+                        <div class="usage-bar large">
+                            <div class="usage-fill" style="width: ${getUsagePercent(agentId, '24h')}%"></div>
+                        </div>
+                    </div>
+                    <div class="usage-stat">
+                        <span class="stat-label">Last 7 days</span>
+                        <span class="stat-value">${formatTokens(usage['7d'])}</span>
+                        <div class="usage-bar large">
+                            <div class="usage-fill" style="width: ${getUsagePercent(agentId, '7d')}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+}
+
+function setPeriod(period) {
+    currentPeriod = period;
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.period === period);
+    });
+    renderTeamList();
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    initTokenUsage();
+    renderTeamList();
+    
+    // Period toggle listeners
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => setPeriod(btn.dataset.period));
+    });
+});
