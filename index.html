@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center v2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>🎯 Command Center v2</h1>
+        <div class="header-right">
+            <span id="current-time"></span>
+            <span class="status-indicator online">● System Online</span>
+        </div>
+    </header>
+    
+    <main>
+        <div class="top-row">
+            <!-- Virtual Office -->
+            <section id="virtual-office" class="panel">
+                <h2>Virtual Office</h2>
+                <div class="office-container">
+                    <div class="office-area" id="calvins-office">
+                        <h3>📋 Calvin's Office</h3>
+                        <div class="agent-slots" id="calvins-office-agents"></div>
+                    </div>
+                    <div class="office-area" id="conference-room">
+                        <h3>🤝 Conference Room</h3>
+                        <div class="agent-slots" id="conference-agents"></div>
+                    </div>
+                    <div class="office-area" id="workstations">
+                        <h3>💻 Workstations</h3>
+                        <div class="agent-slots" id="working-agents"></div>
+                    </div>
+                    <div class="office-area" id="break-room">
+                        <h3>☕ Break Room</h3>
+                        <div class="agent-slots" id="idle-agents"></div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Dashboard -->
+            <section id="dashboard" class="panel">
+                <div id="waiting-on-calvin" class="urgent-section">
+                    <h2>🚨 Waiting on Calvin</h2>
+                    <div id="waiting-items"></div>
+                </div>
+                <div id="project-status">
+                    <h2>📊 Active Projects</h2>
+                    <div id="projects-list"></div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Activity Feed -->
+        <section id="activity-feed" class="panel">
+            <div class="feed-header">
+                <h2>📡 Activity Feed</h2>
+                <div class="feed-filters">
+                    <select id="agent-filter">
+                        <option value="all">All Agents</option>
+                    </select>
+                    <button id="clear-feed">Clear</button>
+                </div>
+            </div>
+            <div id="feed-items"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
