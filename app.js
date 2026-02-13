@@ -5,6 +5,51 @@
 const SUPABASE_URL = 'https://wfwglzrsuuqidscdqgao.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd2dsenJzdXVxaWRzY2RxZ2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTI4MDcsImV4cCI6MjA4NTM4ODgwN30.Tpnv0rJBE1WCmdpt-yHzLIbnNrpriFeAJQeY2y33VlM';
 
+// Create Supabase client for realtime
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Cache for todos from Supabase
+let cachedTodos = [];
+
+// Fetch todos from Supabase
+async function fetchTodosFromSupabase() {
+    try {
+        const { data, error } = await supabase
+            .from('calvin_todos')
+            .select('*')
+            .order('created', { ascending: true });
+        
+        if (error) {
+            console.error('Error fetching todos:', error);
+            return cachedTodos;
+        }
+        
+        cachedTodos = data || [];
+        return cachedTodos;
+    } catch (err) {
+        console.error('Failed to fetch todos:', err);
+        return cachedTodos;
+    }
+}
+
+// Subscribe to realtime updates on todos
+function subscribeToTodosRealtime() {
+    supabase
+        .channel('calvin_todos_changes')
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'calvin_todos' },
+            (payload) => {
+                console.log('Realtime todo update:', payload);
+                // Re-fetch and re-render on any change
+                fetchTodosFromSupabase().then(() => {
+                    renderActionItems();
+                    addToFeed('system', `Todo list updated`, '#3b82f6');
+                });
+            }
+        )
+        .subscribe();
+}
+
 async function sendToSupabase(response) {
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/calvin_responses`, {
@@ -78,7 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Initial render
-    setTimeout(() => {
+    setTimeout(async () => {
+        // Fetch todos from Supabase on load
+        await fetchTodosFromSupabase();
+        // Subscribe to realtime updates
+        subscribeToTodosRealtime();
+        
         renderActionItems();
         renderProjects();
         renderFeed();
@@ -161,15 +211,8 @@ async function renderActionItems() {
     // Get waiting items from Virtual Office
     const waitingItems = window.getWaitingItems ? window.getWaitingItems() : [];
     
-    // Get to-do items from JSON file
-    let todoItems = [];
-    try {
-        const response = await fetch('calvin-todos.json?v=' + Date.now());
-        const data = await response.json();
-        todoItems = data.todos.filter(t => t.status === 'pending');
-    } catch (err) {
-        // No todos file, that's okay
-    }
+    // Get to-do items from Supabase (cached)
+    let todoItems = cachedTodos.filter(t => t.status === 'pending');
     
     // Combine and format all items
     const allItems = [];
@@ -260,17 +303,7 @@ function toggleTodo(todoId) {
 
 // Show detail modal for to-do items
 async function showTodoDetail(todoId) {
-    let todoItems = [];
-    try {
-        const response = await fetch('calvin-todos.json?v=' + Date.now());
-        const data = await response.json();
-        todoItems = data.todos;
-    } catch (err) {
-        console.error('Could not load todos:', err);
-        return;
-    }
-    
-    const item = todoItems.find(t => t.id === todoId);
+    const item = cachedTodos.find(t => t.id === todoId);
     if (!item) return;
     
     const agent = window.agents?.find(a => a.name.toLowerCase() === item.agent?.toLowerCase());
@@ -327,17 +360,7 @@ async function sendTodoResponse(todoId) {
         return;
     }
     
-    let todoItems = [];
-    try {
-        const response = await fetch('calvin-todos.json?v=' + Date.now());
-        const data = await response.json();
-        todoItems = data.todos;
-    } catch (err) {
-        console.error('Could not load todos:', err);
-        return;
-    }
-    
-    const item = todoItems.find(t => t.id === todoId);
+    const item = cachedTodos.find(t => t.id === todoId);
     if (!item) return;
     
     const agent = window.agents?.find(a => a.name.toLowerCase() === item.agent?.toLowerCase());
@@ -368,23 +391,30 @@ async function sendTodoResponse(todoId) {
 
 // Mark a todo as complete
 async function completeTodo(todoId) {
-    let todoItems = [];
-    try {
-        const response = await fetch('calvin-todos.json?v=' + Date.now());
-        const data = await response.json();
-        todoItems = data.todos;
-    } catch (err) {
-        console.error('Could not load todos:', err);
-        return;
-    }
-    
-    const item = todoItems.find(t => t.id === todoId);
+    const item = cachedTodos.find(t => t.id === todoId);
     if (!item) return;
     
     const responseInput = document.getElementById('response-input');
     const notes = responseInput ? responseInput.value.trim() : '';
     
-    // Send completion to Supabase
+    // Update todo status directly in Supabase (realtime will auto-update)
+    const { error: updateError } = await supabase
+        .from('calvin_todos')
+        .update({
+            status: 'complete',
+            completed_at: new Date().toISOString(),
+            completed_by: 'Calvin',
+            notes: notes || null
+        })
+        .eq('id', todoId);
+    
+    if (updateError) {
+        console.error('Error updating todo:', updateError);
+        showToast(`⚠ Failed to update - try again`);
+        return;
+    }
+    
+    // Also send to calvin_responses for Alex to see
     const responsePayload = {
         item_id: todoId,
         agent_id: item.agent,
@@ -397,15 +427,11 @@ async function completeTodo(todoId) {
         created_at: new Date().toISOString()
     };
     
-    const success = await sendToSupabase(responsePayload);
+    await sendToSupabase(responsePayload);
     
-    if (success) {
-        addToFeed(item.agent?.toLowerCase() || 'team', `completed: ${item.title} ✓`, '#22c55e');
-        showToast(`✓ Marked complete - Alex will update the list`);
-        closeModal();
-    } else {
-        showToast(`⚠ Failed to send - try again`);
-    }
+    addToFeed(item.agent?.toLowerCase() || 'team', `completed: ${item.title} ✓`, '#22c55e');
+    showToast(`✓ Marked complete!`);
+    closeModal();
 }
 
 function getTimeAgo(timestamp) {
