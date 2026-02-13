@@ -345,7 +345,6 @@ async function sendTodoResponse(todoId) {
     // Send response to Supabase
     const responsePayload = {
         item_id: todoId,
-        item_type: 'todo',
         agent_id: agent?.id || item.agent,
         agent_name: item.agent || 'Team',
         response_text: responseText,
@@ -388,7 +387,6 @@ async function completeTodo(todoId) {
     // Send completion to Supabase
     const responsePayload = {
         item_id: todoId,
-        item_type: 'todo',
         agent_id: item.agent,
         agent_name: item.agent || 'Team',
         response_text: notes || 'Marked complete',
