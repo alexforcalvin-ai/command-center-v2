@@ -90,10 +90,10 @@ const layout = {
         x: 1050, y: 320, w: 300, h: 180,
         desk: { x: 1270, y: 410 },
         seat: { x: 1315, y: 410 },  // Behind desk (to the right)
-        // Meeting chairs on the LEFT side of office, away from desk
+        // 6 meeting chairs on the LEFT side of office, away from desk
         meetingSpots: [
-            { x: 1100, y: 370 }, { x: 1150, y: 370 },
-            { x: 1100, y: 430 }, { x: 1150, y: 430 }
+            { x: 1090, y: 360 }, { x: 1140, y: 360 }, { x: 1190, y: 360 },
+            { x: 1090, y: 420 }, { x: 1140, y: 420 }, { x: 1190, y: 420 }
         ]
     },
     
@@ -808,6 +808,12 @@ function drawCalvinsOffice() {
     ctx.moveTo(cx - 3, cy - 3);
     ctx.quadraticCurveTo(cx + 2, cy - 1, cx + 4, cy - 3);
     ctx.stroke();
+    
+    // Calvin's name label (like agents have)
+    ctx.fillStyle = '#f85149';
+    ctx.font = 'bold 10px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('CALVIN', cx, cy + 35);
     
     // Meeting chairs (like Alex's office)
     o.meetingSpots.forEach(spot => {
