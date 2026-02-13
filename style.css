@@ -341,13 +341,14 @@ body {
 }
 
 @media (max-width: 480px) {
-    /* Move tabs to bottom on mobile */
+    /* Move tabs to bottom on mobile - MUST stay fixed */
     .tabs {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        z-index: 9999 !important;
         padding-top: 0;
         padding-bottom: env(safe-area-inset-bottom, 0);
         border-bottom: none;
@@ -367,29 +368,33 @@ body {
         border-top-color: #00ff41;
     }
 
+    /* Content area - leave room for fixed bottom tabs */
     .tab-content {
-        height: calc(100vh - 70px) !important;
-        padding-bottom: calc(70px + env(safe-area-inset-bottom, 0));
+        height: auto !important;
+        max-height: calc(100vh - 70px) !important;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+        overflow-y: auto !important;
     }
 
     /* Make dashboard panels fill the screen */
     .dashboard-grid {
         display: flex;
         flex-direction: column;
-        height: calc(100vh - 70px - env(safe-area-inset-bottom, 0));
+        min-height: calc(100vh - 150px);
         padding: 8px;
         gap: 8px;
     }
     
     .dashboard-grid .panel {
         flex: 1;
-        min-height: 0;
+        min-height: 120px;
         overflow-y: auto;
     }
     
     /* Action items panel takes more space */
     .dashboard-grid .action-panel {
         flex: 2;
+        min-height: 200px;
     }
 
     .team-grid {
