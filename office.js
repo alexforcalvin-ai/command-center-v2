@@ -89,6 +89,7 @@ const layout = {
     alexOffice: {
         x: 1050, y: 320, w: 300, h: 180,
         desk: { x: 1270, y: 410 },
+        seat: { x: 1315, y: 410 },  // Behind desk (to the right)
         // Meeting chairs on the LEFT side of office, away from desk
         meetingSpots: [
             { x: 1100, y: 370 }, { x: 1150, y: 370 },
@@ -440,7 +441,7 @@ function updateAgentPositions() {
         
         // Alex always stays in his own office - never goes to Calvin's
         if (agent.id === 'alex') {
-            target = layout.alexOffice.desk;
+            target = layout.alexOffice.seat;
             agent.needsCalvin = false;
         }
         // If agent needs Calvin's attention, go to his office (regardless of current state)
@@ -479,8 +480,8 @@ function updateAgentPositions() {
                     break;
                     
                 case 'alexOffice':
-                    // Alex at his desk
-                    target = layout.alexOffice.desk;
+                    // Alex at his desk (behind the desk)
+                    target = layout.alexOffice.seat;
                     break;
                     
                 case 'withAlex':
@@ -747,9 +748,9 @@ function drawCalvinsOffice() {
     ctx.fillStyle = '#f85149';
     ctx.fillRect(o.desk.x - 18, o.desk.y - 13, 18, 26);
     
-    // Calvin - pixel art avatar with plaid blazer
-    const cx = o.desk.x;
-    const cy = o.desk.y + 5;
+    // Calvin - pixel art avatar with plaid blazer (behind desk, to the right)
+    const cx = o.desk.x + 45;
+    const cy = o.desk.y;
     
     // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
