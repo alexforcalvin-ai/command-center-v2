@@ -10,10 +10,18 @@
 <body>
     <!-- Tab Navigation -->
     <nav class="tabs">
-        <button class="tab active" data-tab="virtual-office">🏢 Virtual Office</button>
-        <button class="tab" data-tab="command-center">📊 Command Center</button>
-        <button class="tab" data-tab="team">👥 Team</button>
+        <button class="tab active" data-tab="virtual-office" onclick="switchTab('virtual-office', this)">🏢 Virtual Office</button>
+        <button class="tab" data-tab="command-center" onclick="switchTab('command-center', this)">📊 Command Center</button>
+        <button class="tab" data-tab="team" onclick="switchTab('team', this)">👥 Team</button>
     </nav>
+    <script>
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+    </script>
 
     <!-- Command Center Tab -->
     <div id="command-center" class="tab-content">
