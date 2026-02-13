@@ -699,18 +699,18 @@ function drawAlexOffice() {
     ctx.lineWidth = 4;
     ctx.strokeRect(o.x, o.y, o.w, o.h);
     
-    // Alex's desk
+    // Alex's desk (vertical/sideways - faces visitors)
     ctx.fillStyle = '#2a2a4e';
-    ctx.fillRect(o.desk.x - 50, o.desk.y - 25, 100, 50);
+    ctx.fillRect(o.desk.x - 25, o.desk.y - 50, 50, 100);
     ctx.strokeStyle = '#3a3a5e';
     ctx.lineWidth = 2;
-    ctx.strokeRect(o.desk.x - 50, o.desk.y - 25, 100, 50);
+    ctx.strokeRect(o.desk.x - 25, o.desk.y - 50, 50, 100);
     
-    // Monitor on desk
+    // Monitor on desk (facing left toward visitors)
     ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(o.desk.x - 15, o.desk.y - 20, 30, 22);
+    ctx.fillRect(o.desk.x - 20, o.desk.y - 15, 22, 30);
     ctx.fillStyle = '#8b5cf6';
-    ctx.fillRect(o.desk.x - 13, o.desk.y - 18, 26, 18);
+    ctx.fillRect(o.desk.x - 18, o.desk.y - 13, 18, 26);
     
     // Meeting chairs
     o.meetingSpots.forEach(spot => {
@@ -737,15 +737,15 @@ function drawCalvinsOffice() {
     ctx.lineWidth = 4;
     ctx.strokeRect(o.x, o.y, o.w, o.h);
     
-    // Calvin's desk
+    // Calvin's desk (vertical/sideways - faces visitors)
     ctx.fillStyle = '#3a2a4e';
-    ctx.fillRect(o.desk.x - 50, o.desk.y - 25, 100, 50);
+    ctx.fillRect(o.desk.x - 25, o.desk.y - 50, 50, 100);
     
-    // Monitor on desk
+    // Monitor on desk (facing left toward visitors)
     ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(o.desk.x - 15, o.desk.y - 20, 30, 22);
+    ctx.fillRect(o.desk.x - 20, o.desk.y - 15, 22, 30);
     ctx.fillStyle = '#f85149';
-    ctx.fillRect(o.desk.x - 13, o.desk.y - 18, 26, 18);
+    ctx.fillRect(o.desk.x - 18, o.desk.y - 13, 18, 26);
     
     // Calvin - pixel art avatar with plaid blazer
     const cx = o.desk.x;
