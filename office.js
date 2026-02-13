@@ -103,16 +103,16 @@ const layout = {
         ]
     },
     
-    // Calvin's corner - small area bottom-center (less prominent, no full office)
+    // Calvin's Office - same size as Alex's office (300x180)
     calvinsOffice: {
-        x: 600, y: 520, w: 200, h: 120,
-        desk: { x: 700, y: 580 },
-        // Meeting chairs in front of desk
+        x: 550, y: 500, w: 300, h: 180,
+        desk: { x: 770, y: 590 },
+        // Meeting chairs on the LEFT side of office, away from desk (like Alex's)
         meetingSpots: [
-            { x: 640, y: 560 }, { x: 700, y: 560 },
-            { x: 640, y: 620 }, { x: 700, y: 620 }
+            { x: 590, y: 540 }, { x: 640, y: 540 }, { x: 690, y: 540 },
+            { x: 590, y: 600 }, { x: 640, y: 600 }, { x: 690, y: 600 }
         ],
-        inside: { x: 760, y: 580 }
+        inside: { x: 815, y: 590 }  // Behind desk (to the right)
     }
 };
 
