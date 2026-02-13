@@ -28,7 +28,7 @@ const agents = [
 const layout = {
     // Individual desks - 2 rows of 8 at the top
     desks: [
-        // Top row
+        // Top row - 8 desks across
         { x: 80, y: 80, agent: 'penny' },
         { x: 180, y: 80, agent: 'owen' },
         { x: 280, y: 80, agent: 'devin' },
@@ -37,14 +37,15 @@ const layout = {
         { x: 1000, y: 80, agent: 'finn' },
         { x: 1100, y: 80, agent: 'mark' },
         { x: 1200, y: 80, agent: 'randy' },
-        // Second row
-        { x: 80, y: 180, agent: 'annie' },
-        { x: 180, y: 180, agent: 'ivan' },
-        { x: 280, y: 180, agent: 'sky' },
-        { x: 380, y: 180, agent: 'leo' },
-        { x: 900, y: 180, agent: 'clara' },
-        { x: 1000, y: 180, agent: 'simon' },
-        { x: 1100, y: 180, agent: 'henry' }
+        // Below break room - 4 desks
+        { x: 80, y: 520, agent: 'annie' },
+        { x: 160, y: 520, agent: 'ivan' },
+        { x: 240, y: 520, agent: 'sky' },
+        { x: 320, y: 520, agent: 'leo' },
+        // Below Alex's office - 3 desks
+        { x: 1080, y: 520, agent: 'clara' },
+        { x: 1180, y: 520, agent: 'simon' },
+        { x: 1280, y: 520, agent: 'henry' }
     ],
     
     // Conference room - LARGEST room, central area
