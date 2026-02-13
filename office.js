@@ -135,7 +135,7 @@ const OFFICE_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdX
 async function loadAgentStates() {
     // Check version - if old version, reset to get new data structure
     const version = localStorage.getItem('commandCenterVersion');
-    const CURRENT_VERSION = '3.1'; // Supabase-aware version - filters out already-responded items
+    const CURRENT_VERSION = '3.2'; // Calvin's office resized to match Alex's
     
     if (version !== CURRENT_VERSION) {
         // New version - reset everything to get new defaults
