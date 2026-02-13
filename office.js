@@ -66,12 +66,22 @@ const layout = {
     },
     
     // Break room - left side (same size as offices)
+    // Water cooler is at center (200, 400), seats arranged around it
     breakRoom: {
         x: 50, y: 320, w: 300, h: 180,
         seats: [
-            { x: 90, y: 370 }, { x: 150, y: 370 }, { x: 210, y: 370 }, { x: 270, y: 370 },
-            { x: 90, y: 420 }, { x: 150, y: 420 }, { x: 210, y: 420 }, { x: 270, y: 420 },
-            { x: 90, y: 470 }, { x: 150, y: 470 }, { x: 210, y: 470 }, { x: 270, y: 470 }
+            // Circle around the water cooler
+            { x: 200, y: 355 },  // top
+            { x: 245, y: 370 },  // top-right
+            { x: 265, y: 410 },  // right
+            { x: 245, y: 450 },  // bottom-right
+            { x: 200, y: 465 },  // bottom
+            { x: 155, y: 450 },  // bottom-left
+            { x: 135, y: 410 },  // left
+            { x: 155, y: 370 },  // top-left
+            // Outer ring for overflow
+            { x: 100, y: 355 },  { x: 300, y: 355 },
+            { x: 100, y: 465 },  { x: 300, y: 465 }
         ]
     },
     
@@ -652,11 +662,25 @@ function drawBreakRoom() {
     ctx.lineWidth = 3;
     ctx.strokeRect(b.x, b.y, b.w, b.h);
     
-    // Small coffee station in corner (minimal furniture for more standing room)
-    ctx.fillStyle = '#8b4513';
-    ctx.fillRect(b.x + 10, b.y + 10, 30, 25);
-    ctx.fillStyle = '#ff6b35';
-    ctx.fillRect(b.x + 15, b.y + 15, 8, 8);
+    // Water cooler in center (agents gather around it)
+    const wcX = b.x + b.w/2;
+    const wcY = b.y + b.h/2 - 10;
+    // Base/stand
+    ctx.fillStyle = '#4a5568';
+    ctx.fillRect(wcX - 12, wcY + 15, 24, 20);
+    // Water jug (blue)
+    ctx.fillStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.arc(wcX, wcY, 15, 0, Math.PI * 2);
+    ctx.fill();
+    // Highlight on jug
+    ctx.fillStyle = '#93c5fd';
+    ctx.beginPath();
+    ctx.arc(wcX - 5, wcY - 5, 5, 0, Math.PI * 2);
+    ctx.fill();
+    // Spout
+    ctx.fillStyle = '#e5e7eb';
+    ctx.fillRect(wcX - 3, wcY + 12, 6, 8);
     
     // Label - ABOVE the room so agent bubbles don't cover it
     ctx.fillStyle = '#6b7280';
