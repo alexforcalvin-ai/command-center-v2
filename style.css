@@ -50,6 +50,10 @@ body {
     overflow: auto;
 }
 
+.tab-content.active {
+    display: block !important;
+}
+
 /* Each tab has its own display type when active */
 #command-center.active {
     display: block !important;
