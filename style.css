@@ -113,6 +113,81 @@ body {
 .waiting-item h4 { font-size: 13px; margin-bottom: 4px; }
 .waiting-item p { font-size: 11px; color: #8b949e; }
 
+/* Action Items (merged list) */
+.action-panel {
+    background: linear-gradient(135deg, #1a1a2e 0%, #161b22 100%);
+    border-color: #58a6ff;
+}
+
+.action-panel h2 {
+    color: #58a6ff;
+}
+
+.action-item {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-item:hover {
+    border-color: #58a6ff;
+    background: #161b22;
+}
+
+.action-item.priority-high {
+    border-left: 3px solid #f85149;
+}
+
+.action-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.action-type {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.action-type.blocking {
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
+}
+
+.action-type.todo {
+    background: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
+}
+
+.action-time {
+    font-size: 10px;
+    color: #8b949e;
+}
+
+.action-item h4 { 
+    font-size: 13px; 
+    margin-bottom: 4px; 
+    color: #e6edf3;
+}
+
+.action-item p { 
+    font-size: 11px; 
+    color: #8b949e; 
+    margin-bottom: 6px;
+}
+
+.action-agent {
+    font-size: 10px;
+    color: #58a6ff;
+}
+
 .btn {
     padding: 6px 12px;
     border-radius: 4px;

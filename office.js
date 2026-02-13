@@ -403,6 +403,11 @@ async function initOffice() {
     // Click handler
     canvas.addEventListener('click', handleClick);
     
+    // Listen for action items updates (agents needing Calvin)
+    window.addEventListener('agentsNeedingCalvinUpdated', () => {
+        updateAgentPositions();
+    });
+    
     // Simulate state changes every 8 seconds (in production, this would be real data)
     setInterval(simulateStateChanges, 8000);
 }
@@ -410,6 +415,9 @@ async function initOffice() {
 function updateAgentPositions() {
     // Count agents in each zone
     let confIdx = 0, breakIdx = 0, waitIdx = 0, alexMeetIdx = 0;
+    
+    // Get agents who need Calvin's attention (from Action Items list)
+    const needsCalvin = window.agentsNeedingCalvin || new Set();
     
     agents.forEach(agent => {
         const state = agentStates[agent.id] || { state: 'idle', task: '' };
@@ -419,45 +427,55 @@ function updateAgentPositions() {
         
         let target;
         
-        switch(agent.state) {
-            case 'working':
-                // Go to their assigned desk
-                const desk = layout.desks.find(d => d.agent === agent.id);
-                target = desk || layout.breakRoom.seats[0];
-                break;
-                
-            case 'meeting':
-                target = layout.conference.seats[confIdx % layout.conference.seats.length];
-                confIdx++;
-                break;
-                
-            case 'idle':
-                target = layout.breakRoom.seats[breakIdx % layout.breakRoom.seats.length];
-                breakIdx++;
-                break;
-                
-            case 'waiting':
-                target = layout.calvinsOffice.meetingSpots[waitIdx % layout.calvinsOffice.meetingSpots.length];
-                waitIdx++;
-                break;
-                
-            case 'withCalvin':
-                target = layout.calvinsOffice.inside;
-                break;
-                
-            case 'alexOffice':
-                // Alex at his desk
-                target = layout.alexOffice.desk;
-                break;
-                
-            case 'withAlex':
-                // Meeting with Alex
-                target = layout.alexOffice.meetingSpots[alexMeetIdx % layout.alexOffice.meetingSpots.length];
-                alexMeetIdx++;
-                break;
-                
-            default:
-                target = layout.breakRoom.seats[0];
+        // If agent needs Calvin's attention, go to his office (regardless of current state)
+        // Unless they're already in a meeting or with Alex
+        if (needsCalvin.has(agent.id) && agent.state !== 'meeting' && agent.state !== 'withAlex') {
+            target = layout.calvinsOffice.meetingSpots[waitIdx % layout.calvinsOffice.meetingSpots.length];
+            waitIdx++;
+            agent.needsCalvin = true; // Flag for visual indicator
+        } else {
+            agent.needsCalvin = false;
+            
+            switch(agent.state) {
+                case 'working':
+                    // Go to their assigned desk
+                    const desk = layout.desks.find(d => d.agent === agent.id);
+                    target = desk || layout.breakRoom.seats[0];
+                    break;
+                    
+                case 'meeting':
+                    target = layout.conference.seats[confIdx % layout.conference.seats.length];
+                    confIdx++;
+                    break;
+                    
+                case 'idle':
+                    target = layout.breakRoom.seats[breakIdx % layout.breakRoom.seats.length];
+                    breakIdx++;
+                    break;
+                    
+                case 'waiting':
+                    target = layout.calvinsOffice.meetingSpots[waitIdx % layout.calvinsOffice.meetingSpots.length];
+                    waitIdx++;
+                    break;
+                    
+                case 'withCalvin':
+                    target = layout.calvinsOffice.inside;
+                    break;
+                    
+                case 'alexOffice':
+                    // Alex at his desk
+                    target = layout.alexOffice.desk;
+                    break;
+                    
+                case 'withAlex':
+                    // Meeting with Alex
+                    target = layout.alexOffice.meetingSpots[alexMeetIdx % layout.alexOffice.meetingSpots.length];
+                    alexMeetIdx++;
+                    break;
+                    
+                default:
+                    target = layout.breakRoom.seats[0];
+            }
         }
         
         agent.targetX = target.x;

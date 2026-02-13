@@ -79,8 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initial render
     setTimeout(() => {
-        renderWaitingItems();
-        renderCalvinTodos();
+        renderActionItems();
         renderProjects();
         renderFeed();
         populateFilter();
@@ -93,12 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for state updates from Virtual Office
     window.addEventListener('agentStatesUpdated', (e) => {
         detectAndLogChanges(e.detail);
-        renderWaitingItems();
+        renderActionItems();
     });
     
     // Poll for changes every 2 seconds
     setInterval(() => {
-        renderWaitingItems();
+        renderActionItems();
     }, 2000);
 });
 
@@ -148,71 +147,112 @@ function addToFeed(agentName, action, color) {
     }, 60000);
 }
 
-// Load and render Calvin's to-do items from JSON file
-async function renderCalvinTodos() {
-    const container = document.getElementById('calvin-todos');
+// Track agents who need Calvin's attention (for Virtual Office positioning)
+window.agentsNeedingCalvin = new Set();
+
+// Combined Action Items - merges waiting items and to-dos
+async function renderActionItems() {
+    const container = document.getElementById('action-items');
     if (!container) return;
     
+    // Clear the set of agents needing Calvin
+    window.agentsNeedingCalvin = new Set();
+    
+    // Get waiting items from Virtual Office
+    const waitingItems = window.getWaitingItems ? window.getWaitingItems() : [];
+    
+    // Get to-do items from JSON file
+    let todoItems = [];
     try {
         const response = await fetch('calvin-todos.json?v=' + Date.now());
         const data = await response.json();
-        
-        const pendingTodos = data.todos.filter(t => t.status === 'pending');
-        
-        if (pendingTodos.length === 0) {
-            container.innerHTML = '<p style="color:#3fb950;padding:10px;">✓ All tasks complete!</p>';
-            return;
-        }
-        
-        container.innerHTML = pendingTodos.map(todo => {
-            const priorityClass = todo.priority === 'high' ? 'priority-high' : '';
-            return `
-                <div class="todo-item ${priorityClass}">
-                    <div class="todo-checkbox" onclick="toggleTodo('${todo.id}')">☐</div>
-                    <div class="todo-content">
-                        <h4>${todo.title}</h4>
-                        <p>${todo.context}</p>
-                        <span class="todo-agent">👤 ${todo.agent}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        todoItems = data.todos.filter(t => t.status === 'pending');
     } catch (err) {
-        container.innerHTML = '<p style="color:#666;padding:10px;">No to-do items loaded</p>';
+        // No todos file, that's okay
     }
-}
-
-function toggleTodo(todoId) {
-    // For now, just visual feedback - actual completion would need backend
-    alert('To mark complete, tell Alex to update the to-do list');
-}
-
-function renderWaitingItems() {
-    const container = document.getElementById('waiting-items');
-    if (!container) return;
     
-    const waitingItems = window.getWaitingItems ? window.getWaitingItems() : [];
+    // Combine and format all items
+    const allItems = [];
     
-    if (waitingItems.length === 0) {
-        container.innerHTML = '<p style="color:#3fb950;padding:10px;">✓ All clear - no one waiting!</p>';
+    // Add waiting items (these are blocking agents)
+    waitingItems.forEach(item => {
+        window.agentsNeedingCalvin.add(item.agentId);
+        allItems.push({
+            id: item.id,
+            type: 'waiting',
+            title: item.title,
+            desc: item.desc,
+            agent: item.agent,
+            agentId: item.agentId,
+            createdAt: item.createdAt,
+            isBlocking: true
+        });
+    });
+    
+    // Add to-do items
+    todoItems.forEach(todo => {
+        // Find agent ID from name
+        const agent = window.agents?.find(a => a.name.toLowerCase() === todo.agent?.toLowerCase());
+        if (agent) {
+            window.agentsNeedingCalvin.add(agent.id);
+        }
+        allItems.push({
+            id: todo.id,
+            type: 'todo',
+            title: todo.title,
+            desc: todo.context,
+            agent: todo.agent,
+            agentId: agent?.id,
+            priority: todo.priority,
+            createdAt: todo.createdAt || Date.now(),
+            isBlocking: false
+        });
+    });
+    
+    // Dispatch event so Virtual Office can update agent positions
+    window.dispatchEvent(new CustomEvent('agentsNeedingCalvinUpdated', { 
+        detail: Array.from(window.agentsNeedingCalvin) 
+    }));
+    
+    if (allItems.length === 0) {
+        container.innerHTML = '<p style="color:#3fb950;padding:10px;">✓ All clear - nothing needs your attention!</p>';
         return;
     }
     
-    // Sort by createdAt (oldest first)
-    waitingItems.sort((a, b) => a.createdAt - b.createdAt);
+    // Sort: blocking items first, then by priority, then by time
+    allItems.sort((a, b) => {
+        if (a.isBlocking !== b.isBlocking) return a.isBlocking ? -1 : 1;
+        if (a.priority !== b.priority) {
+            if (a.priority === 'high') return -1;
+            if (b.priority === 'high') return 1;
+        }
+        return (a.createdAt || 0) - (b.createdAt || 0);
+    });
     
-    container.innerHTML = waitingItems.map(item => {
-        const timeAgo = getTimeAgo(item.createdAt);
+    container.innerHTML = allItems.map(item => {
+        const timeAgo = item.createdAt ? getTimeAgo(item.createdAt) : '';
+        const typeIcon = item.isBlocking ? '🔴' : '📝';
+        const typeLabel = item.isBlocking ? 'Blocking' : 'To-do';
+        const priorityClass = item.priority === 'high' ? 'priority-high' : '';
+        const clickHandler = item.type === 'waiting' ? `onclick="showItemDetail('${item.id}')"` : '';
+        
         return `
-            <div class="waiting-item" onclick="showItemDetail('${item.id}')">
-                <div class="waiting-item-content">
-                    <h4>${item.title}</h4>
-                    <p><strong>${item.agent}:</strong> ${item.desc}</p>
-                    <p class="click-hint">${timeAgo} · Click for details →</p>
+            <div class="action-item ${priorityClass}" ${clickHandler}>
+                <div class="action-item-header">
+                    <span class="action-type ${item.isBlocking ? 'blocking' : 'todo'}">${typeIcon} ${typeLabel}</span>
+                    ${timeAgo ? `<span class="action-time">${timeAgo}</span>` : ''}
                 </div>
+                <h4>${item.title}</h4>
+                <p>${item.desc}</p>
+                <span class="action-agent">👤 ${item.agent}</span>
+                ${item.type === 'waiting' ? '<p class="click-hint">Click for details →</p>' : ''}
             </div>
         `;
     }).join('');
+}
+
+function toggleTodo(todoId) {
+    alert('To mark complete, tell Alex to update the to-do list');
 }
 
 function getTimeAgo(timestamp) {
