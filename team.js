@@ -196,20 +196,102 @@ const teamProfiles = {
     }
 };
 
-// Mock token usage data (would be replaced with real API data)
+// Real token usage data from Supabase
 let tokenUsage = {};
+let tokenUsageSubscription = null;
 
-function initTokenUsage() {
-    Object.keys(teamProfiles).forEach(id => {
-        tokenUsage[id] = {
-            '24h': Math.floor(Math.random() * 50000) + 5000,
-            '7d': Math.floor(Math.random() * 200000) + 20000,
-            limit: 500000
-        };
-    });
-    // Alex uses more (CEO)
-    tokenUsage.alex['24h'] = Math.floor(Math.random() * 100000) + 50000;
-    tokenUsage.alex['7d'] = Math.floor(Math.random() * 500000) + 200000;
+// Supabase client for token usage (uses same client as main app if available)
+const SUPABASE_URL = 'https://wfwglzrsuuqidscdqgao.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd2dsenJzdXVxaWRzY2RxZ2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTI4MDcsImV4cCI6MjA4NTM4ODgwN30.Tpnv0rJBE1WCmdpt-yHzLIbnNrpriFeAJQeY2y33VlM';
+
+async function fetchTokenUsage() {
+    const now = new Date();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    try {
+        // Fetch all usage from the last 7 days
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/agent_token_usage?created_at=gte.${sevenDaysAgo}&select=agent_id,tokens_in,tokens_out,created_at`,
+            {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                }
+            }
+        );
+        
+        if (!response.ok) {
+            console.error('Failed to fetch token usage:', response.statusText);
+            return;
+        }
+        
+        const data = await response.json();
+        
+        // Initialize all agents with zero usage
+        Object.keys(teamProfiles).forEach(id => {
+            tokenUsage[id] = { '24h': 0, '7d': 0, limit: 500000 };
+        });
+        
+        // Aggregate usage by agent
+        data.forEach(row => {
+            const agentId = row.agent_id.toLowerCase();
+            if (!tokenUsage[agentId]) {
+                tokenUsage[agentId] = { '24h': 0, '7d': 0, limit: 500000 };
+            }
+            
+            const totalTokens = (row.tokens_in || 0) + (row.tokens_out || 0);
+            const createdAt = new Date(row.created_at);
+            
+            // Add to 7d total
+            tokenUsage[agentId]['7d'] += totalTokens;
+            
+            // Add to 24h if within last day
+            if (createdAt >= new Date(oneDayAgo)) {
+                tokenUsage[agentId]['24h'] += totalTokens;
+            }
+        });
+        
+        console.log('Token usage loaded:', Object.keys(data).length, 'records');
+        renderTeamList();
+    } catch (err) {
+        console.error('Error fetching token usage:', err);
+    }
+}
+
+function subscribeToTokenUsage() {
+    // Use Supabase realtime to subscribe to new token usage
+    if (typeof window.supabaseClient !== 'undefined') {
+        // If main app has supabase client, use it
+        tokenUsageSubscription = window.supabaseClient
+            .channel('agent_token_usage_changes')
+            .on('postgres_changes', 
+                { event: 'INSERT', schema: 'public', table: 'agent_token_usage' },
+                (payload) => {
+                    console.log('New token usage:', payload.new);
+                    const row = payload.new;
+                    const agentId = row.agent_id.toLowerCase();
+                    const totalTokens = (row.tokens_in || 0) + (row.tokens_out || 0);
+                    
+                    if (!tokenUsage[agentId]) {
+                        tokenUsage[agentId] = { '24h': 0, '7d': 0, limit: 500000 };
+                    }
+                    
+                    tokenUsage[agentId]['24h'] += totalTokens;
+                    tokenUsage[agentId]['7d'] += totalTokens;
+                    renderTeamList();
+                }
+            )
+            .subscribe();
+    } else {
+        // Fallback: poll every 30 seconds
+        setInterval(fetchTokenUsage, 30000);
+    }
+}
+
+async function initTokenUsage() {
+    await fetchTokenUsage();
+    subscribeToTokenUsage();
 }
 
 function getUsagePercent(agentId, period) {
@@ -400,14 +482,20 @@ function setPeriod(period) {
 }
 
 // Initialize - run immediately since script loads after DOM
-function initTeam() {
-    initTokenUsage();
-    renderTeamList();
-    
-    // Period toggle listeners
+async function initTeam() {
+    // Set up period toggle listeners first
     document.querySelectorAll('.period-btn').forEach(btn => {
         btn.addEventListener('click', () => setPeriod(btn.dataset.period));
     });
+    
+    // Initialize with zeros, then fetch real data
+    Object.keys(teamProfiles).forEach(id => {
+        tokenUsage[id] = { '24h': 0, '7d': 0, limit: 500000 };
+    });
+    renderTeamList();
+    
+    // Fetch real token usage from Supabase
+    await initTokenUsage();
     
     console.log('Team tab initialized with', Object.keys(teamProfiles).length, 'agents');
 }
