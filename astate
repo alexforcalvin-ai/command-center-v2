@@ -1,0 +1,12 @@
+#!/bin/bash
+# Quick wrapper for agent state updates
+# Usage: astate <command> <args...>
+# 
+# Examples:
+#   astate working devin "Building feature"
+#   astate meeting devin,penny "Sprint planning"
+#   astate idle devin
+#   astate list
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+node "$SCRIPT_DIR/agent-state-manager.js" "$@"

@@ -85,6 +85,19 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="office.js?v=20260214c"></script>
     <script src="app.js?v=20260214c"></script>
-    <script src="team.js?v=20260217c"></script>
+    <script src="team.js?v=20260217d"></script>
+    <script>
+    // Fallback loader for team.js in case static script fails
+    (async function teamJsFallback() {
+        // Wait a tick for static script to execute
+        await new Promise(r => setTimeout(r, 100));
+        // If team functions don't exist, load dynamically
+        if (typeof teamProfiles === 'undefined') {
+            console.warn('Team.js fallback: loading dynamically');
+            const text = await (await fetch('team.js?v=20260217d')).text();
+            eval(text);
+        }
+    })();
+    </script>
 </body>
 </html>
