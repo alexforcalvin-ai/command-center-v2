@@ -1,5 +1,6 @@
 // Team Tab - Agent Profiles and Token Usage
 // Command Center v2
+console.log('team.js file starting to load');
 
 const teamProfiles = {
     alex: {
