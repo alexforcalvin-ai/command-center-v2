@@ -311,8 +311,13 @@ function formatTokens(num) {
 let currentPeriod = '24h';
 
 function renderTeamList() {
+    console.log('renderTeamList() called');
     const container = document.getElementById('team-list');
-    if (!container) return;
+    console.log('team-list container:', container);
+    if (!container) {
+        console.error('ERROR: #team-list container not found!');
+        return;
+    }
     
     const sortedAgents = Object.entries(teamProfiles).sort((a, b) => {
         // Alex first, then alphabetical
@@ -321,7 +326,9 @@ function renderTeamList() {
         return a[1].name.localeCompare(b[1].name);
     });
     
-    container.innerHTML = sortedAgents.map(([id, profile]) => {
+    console.log('Sorted agents count:', sortedAgents.length);
+    
+    const html = sortedAgents.map(([id, profile]) => {
         const usage = tokenUsage[id] || { '24h': 0, '7d': 0 };
         const percent = getUsagePercent(id, currentPeriod);
         const usageClass = percent > 80 ? 'high' : percent > 50 ? 'medium' : 'low';
@@ -345,6 +352,10 @@ function renderTeamList() {
             </div>
         `;
     }).join('');
+    
+    console.log('Generated HTML length:', html.length);
+    container.innerHTML = html;
+    console.log('Container children count:', container.children.length);
 }
 
 // Render pixel art avatar as inline SVG
@@ -483,16 +494,25 @@ function setPeriod(period) {
 
 // Initialize - run immediately since script loads after DOM
 async function initTeam() {
+    console.log('initTeam() called');
+    
     // Set up period toggle listeners first
-    document.querySelectorAll('.period-btn').forEach(btn => {
+    const periodBtns = document.querySelectorAll('.period-btn');
+    console.log('Found period buttons:', periodBtns.length);
+    periodBtns.forEach(btn => {
         btn.addEventListener('click', () => setPeriod(btn.dataset.period));
     });
     
     // Initialize with zeros, then fetch real data
-    Object.keys(teamProfiles).forEach(id => {
+    const profileKeys = Object.keys(teamProfiles);
+    console.log('Team profiles count:', profileKeys.length);
+    profileKeys.forEach(id => {
         tokenUsage[id] = { '24h': 0, '7d': 0, limit: 500000 };
     });
+    
+    console.log('About to call renderTeamList()');
     renderTeamList();
+    console.log('renderTeamList() completed');
     
     // Fetch real token usage from Supabase
     await initTokenUsage();
@@ -501,8 +521,11 @@ async function initTeam() {
 }
 
 // Run immediately if DOM ready, otherwise wait
+console.log('team.js loaded, readyState:', document.readyState);
 if (document.readyState === 'loading') {
+    console.log('Waiting for DOMContentLoaded');
     document.addEventListener('DOMContentLoaded', initTeam);
 } else {
+    console.log('DOM already ready, calling initTeam now');
     initTeam();
 }
