@@ -53,21 +53,21 @@ const layout = {
         { x: 1280, y: 510, agent: null }  // Empty desk for symmetry
     ],
     
-    // Conference room - LARGEST room, central area - ALL ROOMS AT SAME Y
+    // Conference room - central area, sized to allow Calvin's office on same row
     conference: {
-        x: 450, y: 180, w: 500, h: 200,
-        // Table centered at 700, 280 (center of room)
-        table: { x: 700, y: 280, w: 200, h: 80 },
+        x: 400, y: 180, w: 400, h: 200,
+        // Table centered at 600, 280 (center of room)
+        table: { x: 600, y: 280, w: 160, h: 70 },
         // Seats AROUND the table, not on it
         seats: [
             // Top row (above table)
-            { x: 620, y: 220 }, { x: 700, y: 220 }, { x: 780, y: 220 },
+            { x: 540, y: 220 }, { x: 600, y: 220 }, { x: 660, y: 220 },
             // Bottom row (below table)
-            { x: 620, y: 340 }, { x: 700, y: 340 }, { x: 780, y: 340 },
+            { x: 540, y: 340 }, { x: 600, y: 340 }, { x: 660, y: 340 },
             // Left side
-            { x: 570, y: 280 },
+            { x: 480, y: 280 },
             // Right side
-            { x: 830, y: 280 }
+            { x: 720, y: 280 }
         ]
     },
     
@@ -91,28 +91,30 @@ const layout = {
         ]
     },
     
-    // Alex's Office (CEO) - right side - SAME Y as break room (horizontally aligned)
+    // Alex's Office (CEO) - right side - SAME Y as break room and Calvin's office
     alexOffice: {
-        x: 1050, y: 190, w: 300, h: 180,
-        desk: { x: 1270, y: 280 },
-        seat: { x: 1315, y: 280 },  // Behind desk (to the right)
+        x: 1100, y: 190, w: 250, h: 180,
+        desk: { x: 1280, y: 280 },
+        seat: { x: 1320, y: 280 },  // Behind desk (to the right)
         // 6 meeting chairs on the LEFT side of office, away from desk
         meetingSpots: [
-            { x: 1090, y: 230 }, { x: 1140, y: 230 }, { x: 1190, y: 230 },
-            { x: 1090, y: 290 }, { x: 1140, y: 290 }, { x: 1190, y: 290 }
+            { x: 1130, y: 230 }, { x: 1180, y: 230 }, { x: 1230, y: 230 },
+            { x: 1130, y: 290 }, { x: 1180, y: 290 }, { x: 1230, y: 290 }
         ]
     },
     
-    // Calvin's Office - same size as Alex's office (300x180), same distance from conference room
+    // Calvin's Office - positioned below the main room row with walkway space
+    // Moved down to y: 430 to create comfortable walkway between rooms
     calvinsOffice: {
-        x: 550, y: 390, w: 300, h: 180,
-        desk: { x: 770, y: 480 },
-        // Meeting chairs on the LEFT side of office, away from desk (like Alex's)
+        x: 850, y: 430, w: 200, h: 180,
+        desk: { x: 1000, y: 520 },
+        // Meeting chairs on the LEFT side of office, away from desk
         meetingSpots: [
-            { x: 590, y: 430 }, { x: 640, y: 430 }, { x: 690, y: 430 },
-            { x: 590, y: 490 }, { x: 640, y: 490 }, { x: 690, y: 490 }
+            { x: 880, y: 470 }, { x: 920, y: 470 },
+            { x: 880, y: 530 }, { x: 920, y: 530 },
+            { x: 880, y: 570 }, { x: 920, y: 570 }
         ],
-        inside: { x: 815, y: 480 }  // Behind desk (to the right)
+        inside: { x: 1020, y: 520 }  // Behind desk (to the right)
     }
 };
 
