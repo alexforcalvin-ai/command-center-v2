@@ -134,7 +134,7 @@ const teamProfiles = {
         askMeAbout: ['Current positions', 'Trade rationale', 'Portfolio status', 'Market outlook']
     },
     skye: {
-        name: 'Sky',
+        name: 'Skye',
         role: 'Travel Coordinator',
         color: '#14b8a6',
         emoji: '✈️',
