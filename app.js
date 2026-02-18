@@ -21,6 +21,9 @@ try {
 // Cache for todos from Supabase
 let cachedTodos = [];
 
+// Cache for activity log from Supabase
+let cachedActivityLog = [];
+
 // Fetch todos from Supabase
 async function fetchTodosFromSupabase() {
     // If Supabase client isn't available, return cached/empty
@@ -65,11 +68,65 @@ function subscribeToTodosRealtime() {
                 // Re-fetch and re-render on any change
                 fetchTodosFromSupabase().then(() => {
                     renderActionItems();
-                    addToFeed('system', `Todo list updated`, '#3b82f6');
                 });
             }
         )
         .subscribe();
+}
+
+// Fetch activity log from Supabase
+async function fetchActivityLog() {
+    if (!sb) {
+        console.warn('Supabase client not available - using cached activity');
+        return cachedActivityLog;
+    }
+    
+    try {
+        const { data, error } = await sb
+            .from('activity_log')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(30);
+        
+        if (error) {
+            console.error('Error fetching activity log:', error);
+            return cachedActivityLog;
+        }
+        
+        cachedActivityLog = data || [];
+        console.log('Loaded', cachedActivityLog.length, 'activity entries from Supabase');
+        return cachedActivityLog;
+    } catch (err) {
+        console.error('Failed to fetch activity log:', err);
+        return cachedActivityLog;
+    }
+}
+
+// Subscribe to realtime activity updates
+function subscribeToActivityRealtime() {
+    if (!sb) {
+        console.warn('Supabase client not available - skipping activity subscription');
+        return;
+    }
+    
+    const channel = sb.channel('activity_log_changes');
+    
+    channel.on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'activity_log' },
+        (payload) => {
+            console.log('New activity:', payload.new);
+            // Prepend the new activity to cache
+            cachedActivityLog.unshift(payload.new);
+            // Keep only last 30
+            if (cachedActivityLog.length > 30) cachedActivityLog.pop();
+            // Re-render feed
+            renderFeed();
+        }
+    );
+    
+    channel.subscribe((status) => {
+        console.log('Activity realtime subscription status:', status);
+    });
 }
 
 async function sendToSupabase(response) {
@@ -107,6 +164,7 @@ const projects = [
 let feedItems = [];
 let lastKnownStates = {};
 let currentModalAgent = null;
+let activityLogEnabled = true; // Use Supabase activity_log table
 
 // Tab switching
 document.addEventListener('DOMContentLoaded', () => {
@@ -148,8 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(async () => {
         // Fetch todos from Supabase on load
         await fetchTodosFromSupabase();
+        // Fetch activity log from Supabase
+        await fetchActivityLog();
         // Subscribe to realtime updates
         subscribeToTodosRealtime();
+        subscribeToActivityRealtime();
         
         renderActionItems();
         renderProjects();
@@ -171,6 +232,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         renderActionItems();
     }, 2000);
+    
+    // Also refresh activity feed every 10 seconds as fallback
+    setInterval(async () => {
+        await fetchActivityLog();
+        renderFeed();
+    }, 10000);
 });
 
 function detectAndLogChanges(newStates) {
@@ -653,14 +720,40 @@ function renderFeed() {
     const container = document.getElementById('feed-items');
     if (!container) return;
     
-    if (feedItems.length === 0) {
+    // Merge local feedItems with Supabase activity log
+    const allActivity = [];
+    
+    // Add Supabase activity log entries
+    cachedActivityLog.forEach(entry => {
+        allActivity.push({
+            agent: entry.agent_name || entry.agent_id,
+            action: entry.action,
+            time: getTimeAgo(new Date(entry.created_at).getTime()),
+            color: entry.color || '#8b949e',
+            timestamp: new Date(entry.created_at).getTime()
+        });
+    });
+    
+    // Add local feedItems (for backward compatibility)
+    feedItems.forEach(item => {
+        allActivity.push({
+            ...item,
+            timestamp: item.timestamp || Date.now()
+        });
+    });
+    
+    // Sort by timestamp (newest first) and limit to 30
+    allActivity.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    const displayItems = allActivity.slice(0, 30);
+    
+    if (displayItems.length === 0) {
         container.innerHTML = '<p style="color:#666;padding:10px;">Activity will appear here...</p>';
         return;
     }
     
-    container.innerHTML = feedItems.map(item => `
+    container.innerHTML = displayItems.map(item => `
         <div class="feed-item">
-            <div class="feed-avatar" style="background:${item.color}">${item.agent.substring(0,2).toUpperCase()}</div>
+            <div class="feed-avatar" style="background:${item.color}">${(item.agent || 'SYS').substring(0,2).toUpperCase()}</div>
             <span><strong>${item.agent}</strong> ${item.action}</span>
             <span class="feed-time">${item.time}</span>
         </div>
@@ -688,18 +781,43 @@ function renderFilteredFeed(agentFilter) {
     const container = document.getElementById('feed-items');
     if (!container) return;
     
-    const filtered = agentFilter === 'all' 
-        ? feedItems 
-        : feedItems.filter(f => f.agent === agentFilter);
+    // Merge local feedItems with Supabase activity log
+    const allActivity = [];
     
-    if (filtered.length === 0) {
+    cachedActivityLog.forEach(entry => {
+        allActivity.push({
+            agent: entry.agent_name || entry.agent_id,
+            action: entry.action,
+            time: getTimeAgo(new Date(entry.created_at).getTime()),
+            color: entry.color || '#8b949e',
+            timestamp: new Date(entry.created_at).getTime()
+        });
+    });
+    
+    feedItems.forEach(item => {
+        allActivity.push({
+            ...item,
+            timestamp: item.timestamp || Date.now()
+        });
+    });
+    
+    // Sort and filter
+    allActivity.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    
+    const filtered = agentFilter === 'all' 
+        ? allActivity 
+        : allActivity.filter(f => f.agent.toLowerCase() === agentFilter.toLowerCase());
+    
+    const displayItems = filtered.slice(0, 30);
+    
+    if (displayItems.length === 0) {
         container.innerHTML = '<p style="color:#666;padding:10px;">No activity for this agent...</p>';
         return;
     }
     
-    container.innerHTML = filtered.map(item => `
+    container.innerHTML = displayItems.map(item => `
         <div class="feed-item">
-            <div class="feed-avatar" style="background:${item.color}">${item.agent.substring(0,2).toUpperCase()}</div>
+            <div class="feed-avatar" style="background:${item.color}">${(item.agent || 'SYS').substring(0,2).toUpperCase()}</div>
             <span><strong>${item.agent}</strong> ${item.action}</span>
             <span class="feed-time">${item.time}</span>
         </div>
@@ -825,11 +943,5 @@ function approveItem(itemId) {
     showItemDetail(itemId);
 }
 
-// Initialize feed with some starting items
-setTimeout(() => {
-    if (window.agents) {
-        addToFeed('alex', 'coordinating team operations', '#8b5cf6');
-        addToFeed('devin', 'building Command Center v2', '#10b981');
-        addToFeed('leo', 'completed Agent Messaging Policy', '#6366f1');
-    }
-}, 500);
+// Activity feed now loads from Supabase - no fake initialization needed
+// Real activity appears as agents log their work via activity-logger.js

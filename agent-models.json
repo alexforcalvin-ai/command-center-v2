@@ -1,0 +1,23 @@
+{
+  "_comment": "Agent model configuration - synced from openclaw.json",
+  "_updated": "2026-02-17T21:30:00Z",
+  "default": "Claude Opus",
+  "agents": {
+    "alex": "Claude Opus",
+    "devin": "Claude Sonnet 4",
+    "penny": "Claude Sonnet 4",
+    "denise": "Claude Sonnet 4",
+    "henry": "Claude Sonnet 4",
+    "molly": "Claude Opus",
+    "finn": "Claude Opus",
+    "leo": "Claude Opus",
+    "ivan": "Claude Opus",
+    "mark": "Gemini Pro",
+    "randy": "Gemini Pro",
+    "annie": "Gemini Pro",
+    "owen": "GPT-4o-mini",
+    "clara": "GPT-4o-mini",
+    "simon": "GPT-4o-mini",
+    "skye": "Claude Sonnet 4"
+  }
+}

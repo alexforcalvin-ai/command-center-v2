@@ -1,6 +1,9 @@
 // Team Tab - Agent Profiles and Token Usage
 // Command Center v2
 
+// Models loaded dynamically from agent-models.json
+let agentModels = {};
+
 const teamProfiles = {
     alex: {
         name: 'Alex Carter',
@@ -204,6 +207,25 @@ let tokenUsageSubscription = null;
 const SUPABASE_URL = 'https://wfwglzrsuuqidscdqgao.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd2dsenJzdXVxaWRzY2RxZ2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTI4MDcsImV4cCI6MjA4NTM4ODgwN30.Tpnv0rJBE1WCmdpt-yHzLIbnNrpriFeAJQeY2y33VlM';
 
+// Fetch agent models from config file
+async function fetchAgentModels() {
+    try {
+        const response = await fetch('./agent-models.json?' + Date.now()); // cache bust
+        if (response.ok) {
+            const data = await response.json();
+            agentModels = data.agents || {};
+            console.log('Loaded agent models:', Object.keys(agentModels).length);
+        }
+    } catch (err) {
+        console.error('Error loading agent models:', err);
+    }
+}
+
+// Get the model for an agent (dynamic from config, fallback to profile)
+function getAgentModel(agentId) {
+    return agentModels[agentId] || teamProfiles[agentId]?.model || 'Unknown';
+}
+
 async function fetchTokenUsage() {
     const now = new Date();
     const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
@@ -334,7 +356,7 @@ function renderTeamList() {
                 <div class="team-info">
                     <div class="team-name">${profile.emoji} ${profile.name}</div>
                     <div class="team-role">${profile.role}</div>
-                    <div class="team-model">${profile.model}</div>
+                    <div class="team-model">${getAgentModel(id)}</div>
                 </div>
                 <div class="team-usage">
                     <div class="usage-label">${formatTokens(usage[currentPeriod])} tokens</div>
@@ -415,7 +437,7 @@ function showAgentProfile(agentId) {
                 <div class="profile-title">
                     <h2>${profile.name}</h2>
                     <div class="profile-role">${profile.role}</div>
-                    <div class="profile-model">🤖 ${profile.model}</div>
+                    <div class="profile-model">🤖 ${getAgentModel(agentId)}</div>
                 </div>
             </div>
             
@@ -492,6 +514,10 @@ async function initTeam() {
     Object.keys(teamProfiles).forEach(id => {
         tokenUsage[id] = { '24h': 0, '7d': 0, limit: 500000 };
     });
+    
+    // Fetch agent models from config (dynamic, not hardcoded)
+    await fetchAgentModels();
+    
     renderTeamList();
     
     // Fetch real token usage from Supabase
