@@ -501,8 +501,9 @@ async function initOffice() {
     // Start game loop
     requestAnimationFrame(gameLoop);
     
-    // Click handler
+    // Click and touch handlers for mobile support
     canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('touchend', handleTouch);
     
     // Listen for action items updates (agents needing Calvin)
     window.addEventListener('agentsNeedingCalvinUpdated', () => {
@@ -985,6 +986,27 @@ function handleClick(e) {
     updateInfoPanel();
 }
 
+function handleTouch(e) {
+    e.preventDefault(); // Prevent default touch behavior and click event
+    if (e.changedTouches.length > 0) {
+        const touch = e.changedTouches[0];
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const touchX = (touch.clientX - rect.left) * scaleX;
+        const touchY = (touch.clientY - rect.top) * scaleY;
+        
+        selectedAgent = null;
+        agents.forEach(agent => {
+            const dist = Math.sqrt((touchX - agent.x) ** 2 + (touchY - agent.y) ** 2);
+            // Slightly larger touch target for mobile (30 instead of 25)
+            if (dist < 30) selectedAgent = agent;
+        });
+        
+        updateInfoPanel();
+    }
+}
+
 function updateInfoPanel() {
     const panel = document.getElementById('agent-info-panel');
     if (!panel) return;
@@ -1006,7 +1028,7 @@ function updateInfoPanel() {
             ${selectedAgent.task ? `<br><span style="color:#aaa;font-size:8px;">${selectedAgent.task}</span>` : ''}
         `;
     } else {
-        panel.textContent = 'Click an agent to see details';
+        panel.textContent = window.innerWidth <= 480 ? 'Tap an agent to see details' : 'Click an agent to see details';
     }
 }
 

@@ -345,9 +345,10 @@ body {
 }
 
 @media (max-width: 480px) {
-    /* Add top spacing on mobile for notch/status bar */
+    /* Add top and bottom safe area insets */
     body {
         padding-top: env(safe-area-inset-top, 24px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     
     /* Move tabs to bottom on mobile - MUST stay fixed */
@@ -367,8 +368,10 @@ body {
     }
 
     .tab {
-        padding: 16px 16px;
-        font-size: 10px;
+        padding: 16px 8px;
+        font-family: 'Inter', sans-serif; /* Use consistent font - NOT Press Start 2P */
+        font-size: 11px;
+        font-weight: 500;
         border-bottom: none;
         border-top: 3px solid transparent;
         pointer-events: auto !important;
@@ -384,36 +387,102 @@ body {
 
     /* Content area - leave room for fixed bottom tabs and top spacing */
     .tab-content {
-        height: calc(100vh - 70px - env(safe-area-inset-top, 24px)) !important;
+        height: calc(100vh - 70px - env(safe-area-inset-top, 24px) - env(safe-area-inset-bottom, 0px)) !important;
         margin-bottom: 70px !important;
-        padding-bottom: 0 !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
         padding-top: 16px !important;
         overflow-y: auto !important;
     }
 
-    /* Make dashboard panels fill the screen */
+    /* Command Center Dashboard - Auto-size panels to content */
     .dashboard-grid {
         display: flex;
         flex-direction: column;
-        min-height: calc(100vh - 150px);
         padding: 8px;
         gap: 8px;
     }
     
     .dashboard-grid .panel {
-        flex: 1;
-        min-height: 120px;
+        min-height: 0; /* Allow panels to shrink to content */
         overflow-y: auto;
     }
     
-    /* Action items panel takes more space */
+    /* Action items panel - auto-size based on content */
     .dashboard-grid .action-panel {
-        flex: 2;
-        min-height: 200px;
+        min-height: 0; /* Remove fixed minimum height */
+        /* If only "all clear" message, take minimal space */
+    }
+    
+    /* When action items contains only the "all clear" message */
+    .action-panel:has(p:only-child) {
+        min-height: 60px !important; /* Minimal height for "all clear" */
+        flex-grow: 0 !important; /* Don't grow */
+    }
+    
+    /* Fallback for browsers that don't support :has() */
+    .action-panel-minimal {
+        min-height: 60px !important;
+        flex-grow: 0 !important;
+    }
+
+    /* Virtual Office - Mobile optimizations */
+    #virtual-office {
+        padding: 8px;
+    }
+    
+    .office-header {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+        align-items: flex-start;
+    }
+    
+    .pixel-title {
+        font-size: 14px;
+        align-self: center;
+    }
+    
+    .legend {
+        gap: 8px;
+        font-size: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    #office-canvas {
+        max-width: 100%;
+        height: 60vh; /* Give more vertical space on mobile */
+        max-height: 500px;
+        object-fit: contain; /* Maintain aspect ratio */
+        border-width: 2px; /* Thinner border on mobile */
+    }
+    
+    #agent-info-panel {
+        margin-top: 8px;
+        padding: 8px 12px;
+        font-size: 9px;
+        min-width: 0;
+        width: 100%;
+        /* Change "Click" to "Tap" on mobile */
+    }
+
+    /* Team Tab - Reduce excessive spacing */
+    #team {
+        padding: 16px 8px 8px 8px; /* Reduce top/side padding */
+    }
+    
+    .team-header {
+        margin-bottom: 16px; /* Reduce from 24px */
     }
 
     .team-grid {
         grid-template-columns: 1fr;
+        gap: 8px; /* Reduce gap from 16px to 8px */
+    }
+    
+    .team-card {
+        padding: 12px; /* Reduce padding from 16px */
     }
 
     .team-title {
@@ -423,6 +492,18 @@ body {
     .panel,
     .modal-content {
         padding: 12px;
+    }
+    
+    /* Ensure minimum tap targets (44pt) for mobile */
+    .tab,
+    .btn,
+    .period-btn,
+    .action-item,
+    .team-card,
+    .waiting-item,
+    .todo-item {
+        min-height: 44px;
+        min-width: 44px;
     }
 }
 #agent-info-panel {

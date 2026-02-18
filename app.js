@@ -185,8 +185,34 @@ let lastKnownStates = {};
 let currentModalAgent = null;
 let activityLogEnabled = true; // Use Supabase activity_log table
 
+// Mobile responsive text updates
+function updateMobileTexts() {
+    const isMobile = window.innerWidth <= 480;
+    const agentInfoPanel = document.getElementById('agent-info-panel');
+    if (agentInfoPanel && agentInfoPanel.textContent.includes('agent to see details')) {
+        agentInfoPanel.textContent = isMobile ? 'Tap an agent to see details' : 'Click an agent to see details';
+    }
+}
+
 // Tab switching
 document.addEventListener('DOMContentLoaded', () => {
+    // Update mobile texts on load
+    updateMobileTexts();
+    
+    // Update on window resize and orientation change
+    window.addEventListener('resize', () => {
+        updateMobileTexts();
+        // Re-render action items to handle panel sizing on resize
+        setTimeout(renderActionItems, 100);
+    });
+    
+    // Handle orientation change on mobile
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            updateMobileTexts();
+            renderActionItems();
+        }, 300);
+    });
     // Tab buttons
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -369,7 +395,23 @@ async function renderActionItems() {
     
     if (allItems.length === 0) {
         container.innerHTML = '<p style="color:#3fb950;padding:10px;">✓ All clear - nothing needs your attention!</p>';
+        
+        // On mobile, add class to minimize panel size when only showing "all clear"
+        if (window.innerWidth <= 480) {
+            const actionPanel = container.closest('.action-panel');
+            if (actionPanel) {
+                actionPanel.classList.add('action-panel-minimal');
+            }
+        }
         return;
+    }
+    
+    // Remove minimal class if we have actual items
+    if (window.innerWidth <= 480) {
+        const actionPanel = container.closest('.action-panel');
+        if (actionPanel) {
+            actionPanel.classList.remove('action-panel-minimal');
+        }
     }
     
     // Sort: blocking items first, then by priority, then by time

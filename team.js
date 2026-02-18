@@ -359,7 +359,7 @@ function renderTeamList() {
                     <div class="team-model">${getAgentModel(id)}</div>
                 </div>
                 <div class="team-usage">
-                    <div class="usage-label">${formatTokens(usage[currentPeriod])} tokens</div>
+                    <div class="usage-label">${formatTokens(usage[currentPeriod])} / ${formatTokens(currentPeriod === '24h' ? 100000 : 500000)}</div>
                     <div class="usage-bar">
                         <div class="usage-fill ${usageClass}" style="width: ${percent}%"></div>
                     </div>
