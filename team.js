@@ -207,17 +207,33 @@ let tokenUsageSubscription = null;
 const SUPABASE_URL = 'https://wfwglzrsuuqidscdqgao.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd2dsenJzdXVxaWRzY2RxZ2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTI4MDcsImV4cCI6MjA4NTM4ODgwN30.Tpnv0rJBE1WCmdpt-yHzLIbnNrpriFeAJQeY2y33VlM';
 
-// Fetch agent models from config file
+// Fetch agent models from Supabase (source of truth)
 async function fetchAgentModels() {
     try {
-        const response = await fetch('./agent-models.json?' + Date.now()); // cache bust
-        if (response.ok) {
-            const data = await response.json();
-            agentModels = data.agents || {};
-            console.log('Loaded agent models:', Object.keys(agentModels).length);
-        }
+        const response = await fetch(
+            'https://wfwglzrsuuqidscdqgao.supabase.co/rest/v1/agent_config?select=id,name,model,emoji',
+            {
+                headers: {
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd2dsenJzdXVxaWRzY2RxZ2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTI4MDcsImV4cCI6MjA4NTM4ODgwN30.Tpnv0rJBE1WCmdpt-yHzLIbnNrpriFeAJQeY2y33VlM'
+                }
+            }
+        );
+        const data = await response.json();
+        // Convert array to object keyed by agent id
+        data.forEach(agent => {
+            agentModels[agent.id] = agent.model;
+        });
+        console.log('Loaded agent models from Supabase:', Object.keys(agentModels).length);
     } catch (err) {
-        console.error('Error loading agent models:', err);
+        console.error('Error loading agent models from Supabase, falling back to static:', err);
+        // Fall back to static JSON
+        try {
+            const response = await fetch('./agent-models.json?' + Date.now());
+            const fallback = await response.json();
+            agentModels = fallback.agents || {};
+        } catch (e) {
+            console.error('Static fallback also failed:', e);
+        }
     }
 }
 
