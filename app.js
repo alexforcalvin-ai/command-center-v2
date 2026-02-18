@@ -74,32 +74,51 @@ function subscribeToTodosRealtime() {
         .subscribe();
 }
 
-// Fetch activity log from Supabase
+// Fetch activity log from Supabase (with REST API fallback)
 async function fetchActivityLog() {
-    if (!sb) {
-        console.warn('Supabase client not available - using cached activity');
-        return cachedActivityLog;
+    // Try Supabase client first
+    if (sb) {
+        try {
+            const { data, error } = await sb
+                .from('activity_log')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(30);
+            
+            if (!error && data) {
+                cachedActivityLog = data;
+                console.log('Loaded', cachedActivityLog.length, 'activity entries via Supabase client');
+                return cachedActivityLog;
+            }
+            console.warn('Supabase client error, falling back to REST:', error);
+        } catch (err) {
+            console.warn('Supabase client failed, falling back to REST:', err);
+        }
     }
     
+    // Fallback to direct REST API
     try {
-        const { data, error } = await sb
-            .from('activity_log')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(30);
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/activity_log?select=*&order=created_at.desc&limit=30`,
+            {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                }
+            }
+        );
         
-        if (error) {
-            console.error('Error fetching activity log:', error);
+        if (response.ok) {
+            cachedActivityLog = await response.json();
+            console.log('Loaded', cachedActivityLog.length, 'activity entries via REST API');
             return cachedActivityLog;
         }
-        
-        cachedActivityLog = data || [];
-        console.log('Loaded', cachedActivityLog.length, 'activity entries from Supabase');
-        return cachedActivityLog;
+        console.error('REST API error:', response.status);
     } catch (err) {
-        console.error('Failed to fetch activity log:', err);
-        return cachedActivityLog;
+        console.error('REST API failed:', err);
     }
+    
+    return cachedActivityLog;
 }
 
 // Subscribe to realtime activity updates
@@ -718,7 +737,12 @@ function renderProjects() {
 
 function renderFeed() {
     const container = document.getElementById('feed-items');
-    if (!container) return;
+    if (!container) {
+        console.error('feed-items container not found!');
+        return;
+    }
+    
+    console.log('renderFeed called, cachedActivityLog has', cachedActivityLog.length, 'entries');
     
     // Merge local feedItems with Supabase activity log
     const allActivity = [];
