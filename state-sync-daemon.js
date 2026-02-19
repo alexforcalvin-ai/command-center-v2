@@ -16,7 +16,7 @@ const SUPABASE_URL = 'https://wfwglzrsuuqidscdqgao.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd2dsenJzdXVxaWRzY2RxZ2FvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTgxMjgwNywiZXhwIjoyMDg1Mzg4ODA3fQ.WPmAxHB6EddgdB_N0aQByAC0sB6RUUojusTQO8CvhkM';
 
 const OPENCLAW_DIR = '/Users/AlexCarter/.openclaw';
-const SYNC_INTERVAL = 30000;
+const SYNC_INTERVAL = 10000; // 10 seconds
 
 const AGENT_IDS = ['main','penny','owen','devin','denise','molly','finn','mark','randy','annie','ivan','skye','leo','clara','simon','henry'];
 const ID_TO_NAME = { main:'alex', penny:'penny', owen:'owen', devin:'devin', denise:'denise', molly:'molly', finn:'finn', mark:'mark', randy:'randy', annie:'annie', ivan:'ivan', skye:'sky', leo:'leo', clara:'clara', simon:'simon', henry:'henry' };
@@ -98,13 +98,14 @@ function determineStates() {
     const activeSubagents = getActiveSubagentRuns();
     const activeCrons = getActiveCronRuns();
     const mainActivity = getMainSessionActivity();
+    const pendingTodos = getPendingTodosForAgents();
 
     // Default everyone to idle
     for (const id of AGENT_IDS) {
         states[ID_TO_NAME[id]] = { state: 'idle', task: '' };
     }
 
-    // Check sub-agent runs
+    // Check sub-agent runs — active work always takes priority
     for (const run of activeSubagents) {
         const name = ID_TO_NAME[run.agentId];
         if (name) {
@@ -113,7 +114,7 @@ function determineStates() {
         }
     }
 
-    // Check cron runs  
+    // Check cron runs — active work takes priority
     for (const run of activeCrons) {
         const name = ID_TO_NAME[run.agentId];
         if (name && states[name].state === 'idle') {
@@ -121,16 +122,52 @@ function determineStates() {
         }
     }
 
+    // Agents waiting on Calvin — but ONLY if they're not actively working
+    // Active work (desk/meeting) takes priority over waiting state
+    // When work finishes and they go idle, THEN they go to Calvin's office to wait
+    for (const [name, todoTitle] of Object.entries(pendingTodos)) {
+        if (states[name] && states[name].state === 'idle') {
+            states[name] = { state: 'waiting', task: todoTitle };
+        }
+    }
+
     // Alex's state
     if (mainActivity.active) {
-        // Alex is active in main session = talking with Calvin
         states.alex = { state: 'withCalvin', task: 'Talking with Calvin' };
     } else if (activeSubagents.length > 0) {
-        // Alex isn't active in main session but has spawned agents = managing team
         states.alex = { state: 'working', task: 'Managing team operations' };
     }
 
     return states;
+}
+
+// Check calvin_todos for pending items assigned to agents
+let cachedPendingTodos = {};
+let lastTodoFetchMs = 0;
+function getPendingTodosForAgents() {
+    // Only refetch every 60 seconds to avoid hammering Supabase
+    if (Date.now() - lastTodoFetchMs < 60000) return cachedPendingTodos;
+    // Fetch async but return cached for now — next cycle will have fresh data
+    fetchPendingTodos();
+    return cachedPendingTodos;
+}
+
+async function fetchPendingTodos() {
+    try {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/calvin_todos?status=eq.pending&select=agent,title`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        if (resp.ok) {
+            const todos = await resp.json();
+            const byAgent = {};
+            for (const t of todos) {
+                const name = (t.agent || '').toLowerCase();
+                if (name && !byAgent[name]) byAgent[name] = t.title;
+            }
+            cachedPendingTodos = byAgent;
+            lastTodoFetchMs = Date.now();
+        }
+    } catch {}
 }
 
 async function supabasePatch(table, filter, body) {
