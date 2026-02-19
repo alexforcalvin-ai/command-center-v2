@@ -524,7 +524,38 @@ async function initOffice() {
         updateAgentPositions();
     });
     
-    // Real-time updates now come from Supabase subscription (no more simulation)
+    // Real-time state sync from Supabase (daemon writes, office reads)
+    if (window.supabase && window.supabase.createClient) {
+        try {
+            const sbOffice = window.supabase.createClient(
+                'https://wfwglzrsuuqidscdqgao.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd2dsenJzdXVxaWRzY2RxZ2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTI4MDcsImV4cCI6MjA4NTM4ODgwN30.Tpnv0rJBE1WCmdpt-yHzLIbnNrpriFeAJQeY2y33VlM'
+            );
+            sbOffice.channel('agent_states_realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_states' }, (payload) => {
+                    const row = payload.new;
+                    if (row && row.agent_id) {
+                        const agent = agents.find(a => a.id === row.agent_id || a.name.toLowerCase() === row.agent_id);
+                        if (agent) {
+                            agent.state = row.state || 'idle';
+                            agent.task = row.task || '';
+                            updateAgentPositions();
+                            console.log(`[Realtime] ${row.agent_id} → ${row.state}`);
+                        }
+                    }
+                })
+                .subscribe();
+            console.log('Subscribed to agent_states realtime');
+        } catch (err) {
+            console.warn('Could not subscribe to realtime:', err);
+        }
+    }
+    
+    // Also refresh states every 60 seconds as fallback
+    setInterval(async () => {
+        await loadAgentStates();
+        updateAgentPositions();
+    }, 60000);
 }
 
 function updateAgentPositions() {
