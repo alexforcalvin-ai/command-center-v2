@@ -59,6 +59,14 @@
             </div>
         </div>
         <canvas id="office-canvas"></canvas>
+        <button id="reset-zoom-btn" onclick="viewTransform={x:0,y:0,scale:1}" style="display:none;position:fixed;bottom:80px;right:16px;z-index:100;padding:10px 16px;border-radius:8px;border:none;background:#333;color:#fff;font-size:14px;">Reset Zoom</button>
+        <script>
+        // Show reset button when zoomed in
+        setInterval(function(){
+            var btn=document.getElementById('reset-zoom-btn');
+            if(typeof viewTransform!=='undefined'&&viewTransform.scale>1){btn.style.display='block'}else{btn.style.display='none'}
+        },500);
+        </script>
         <div id="agent-info-panel">Click an agent to see details</div>
     </div>
 
@@ -83,7 +91,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="office.js?v=20260217f"></script>
+    <script src="office.js?v=20260218a"></script>
     <script src="app.js?v=20260217g"></script>
     <script src="team.js?v=20260217e"></script>
     <script>

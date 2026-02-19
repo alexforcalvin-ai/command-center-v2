@@ -4,6 +4,13 @@
 const CANVAS_WIDTH = 1400;
 const CANVAS_HEIGHT = 850;
 
+// Mobile zoom and pan state
+let viewTransform = { x: 0, y: 0, scale: 1 };
+let isPanning = false;
+let lastPanPoint = null;
+let lastPinchDist = null;
+let initialPinchScale = 1;
+
 // Agent definitions
 const agents = [
     { id: 'alex', name: 'Alex', role: 'CEO', color: '#8b5cf6' },
@@ -505,6 +512,13 @@ async function initOffice() {
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('touchend', handleTouch);
     
+    // Mobile pinch-to-zoom and pan
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    
+    // Mouse wheel zoom for desktop
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    
     // Listen for action items updates (agents needing Calvin)
     window.addEventListener('agentsNeedingCalvinUpdated', () => {
         updateAgentPositions();
@@ -617,9 +631,19 @@ function update() {
 }
 
 function render() {
-    // Clear
+    // Clear entire canvas (before transform)
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#0a0a15';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    // Apply zoom and pan transform
+    const rect = canvas.getBoundingClientRect();
+    const displayScale = CANVAS_WIDTH / rect.width;
+    ctx.setTransform(
+        viewTransform.scale, 0, 0, viewTransform.scale,
+        viewTransform.x * displayScale,
+        viewTransform.y * displayScale
+    );
     
     // Floor pattern
     ctx.fillStyle = '#0f0f1a';
@@ -970,12 +994,93 @@ function drawAgent(agent) {
     }
 }
 
-function handleClick(e) {
+// === ZOOM AND PAN HANDLERS ===
+
+function handleTouchStart(e) {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastPinchDist = Math.sqrt(dx * dx + dy * dy);
+        initialPinchScale = viewTransform.scale;
+        isPanning = false;
+    } else if (e.touches.length === 1 && viewTransform.scale > 1) {
+        isPanning = true;
+        lastPanPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+}
+
+function handleTouchMove(e) {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (lastPinchDist) {
+            const ratio = dist / lastPinchDist;
+            viewTransform.scale = Math.min(4, Math.max(1, initialPinchScale * ratio));
+            clampPan();
+        }
+        lastPinchDist = dist;
+    } else if (e.touches.length === 1 && isPanning && lastPanPoint) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - lastPanPoint.x;
+        const dy = e.touches[0].clientY - lastPanPoint.y;
+        viewTransform.x += dx;
+        viewTransform.y += dy;
+        clampPan();
+        lastPanPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+}
+
+function handleWheel(e) {
+    e.preventDefault();
     const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    const newScale = Math.min(4, Math.max(1, viewTransform.scale * zoomFactor));
+    
+    // Zoom toward mouse position
+    const scaleChange = newScale / viewTransform.scale;
+    viewTransform.x = mouseX - (mouseX - viewTransform.x) * scaleChange;
+    viewTransform.y = mouseY - (mouseY - viewTransform.y) * scaleChange;
+    viewTransform.scale = newScale;
+    clampPan();
+}
+
+function clampPan() {
+    if (viewTransform.scale <= 1) {
+        viewTransform.x = 0;
+        viewTransform.y = 0;
+        viewTransform.scale = 1;
+        return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const maxX = 0;
+    const maxY = 0;
+    const minX = -(rect.width * viewTransform.scale - rect.width);
+    const minY = -(rect.height * viewTransform.scale - rect.height);
+    viewTransform.x = Math.min(maxX, Math.max(minX, viewTransform.x));
+    viewTransform.y = Math.min(maxY, Math.max(minY, viewTransform.y));
+}
+
+// Convert screen coordinates to canvas coordinates accounting for zoom/pan
+function screenToCanvas(screenX, screenY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (screenX - rect.left - viewTransform.x) / viewTransform.scale;
+    const y = (screenY - rect.top - viewTransform.y) / viewTransform.scale;
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const clickX = (e.clientX - rect.left) * scaleX;
-    const clickY = (e.clientY - rect.top) * scaleY;
+    return { x: x * scaleX, y: y * scaleY };
+}
+
+function handleClick(e) {
+    const pos = screenToCanvas(e.clientX, e.clientY);
+    const clickX = pos.x;
+    const clickY = pos.y;
     
     selectedAgent = null;
     agents.forEach(agent => {
@@ -987,14 +1092,15 @@ function handleClick(e) {
 }
 
 function handleTouch(e) {
-    e.preventDefault(); // Prevent default touch behavior and click event
+    e.preventDefault();
+    // Don't select agent if we were panning
+    if (isPanning) { isPanning = false; lastPanPoint = null; return; }
+    lastPinchDist = null;
     if (e.changedTouches.length > 0) {
         const touch = e.changedTouches[0];
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const touchX = (touch.clientX - rect.left) * scaleX;
-        const touchY = (touch.clientY - rect.top) * scaleY;
+        const pos = screenToCanvas(touch.clientX, touch.clientY);
+        const touchX = pos.x;
+        const touchY = pos.y;
         
         selectedAgent = null;
         agents.forEach(agent => {
